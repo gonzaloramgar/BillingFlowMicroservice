@@ -1,5 +1,9 @@
 package com.example.payment_service.controller;
 
+import com.example.payment_service.dto.CreateSessionRequest;
+import com.example.payment_service.dto.CreateSessionResponse;
+import com.example.payment_service.dto.ErrorResponse;
+import com.example.payment_service.dto.SessionEmailResponse;
 import com.example.payment_service.model.PaymentTransaction;
 import com.example.payment_service.repository.PaymentRepository;
 import com.stripe.model.Event;
@@ -13,9 +17,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @Controller
@@ -34,13 +35,13 @@ public class PaymentController {
     // 1. CREAR SESIÓN: Ahora recibe y envía el email a Stripe
     @PostMapping("/create-session")
     @ResponseBody
-    public ResponseEntity<Map<String, String>> createSession(@RequestBody Map<String, Object> data) {
+    public ResponseEntity<?> createSession(@RequestBody CreateSessionRequest request) {
         com.stripe.Stripe.apiKey = stripeApiKey;
 
     try {
-        Long amount = Long.parseLong(data.get("amount").toString());
-        String successUrl = data.get("successUrl") != null ? data.get("successUrl").toString() : null;
-        String cancelUrl = data.get("cancelUrl") != null ? data.get("cancelUrl").toString() : null;
+        Long amount = request.getAmount();
+        String successUrl = request.getSuccessUrl();
+        String cancelUrl = request.getCancelUrl();
 
         SessionCreateParams.Builder builder = SessionCreateParams.builder()
                 .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
@@ -62,34 +63,30 @@ public class PaymentController {
                         .build());
                         
         Session session = Session.create(builder.build());
-        
-        Map<String, String> response = new HashMap<>();
-        response.put("url", session.getUrl());
-        return ResponseEntity.ok(response);
+
+        return ResponseEntity.ok(new CreateSessionResponse(session.getUrl()));
 
     } catch (Exception e) {
-        Map<String, String> error = new HashMap<>();
-        error.put("error", e.getMessage());
-        return ResponseEntity.status(500).body(error);
+        return ResponseEntity.status(500).body(new ErrorResponse(e.getMessage()));
     }
 }
 
     @GetMapping("/checkout-session-email")
     @ResponseBody
-    public ResponseEntity<Map<String, String>> getCheckoutSessionEmail(@RequestParam(value = "sessionId", required = false) String sessionId) {
+    public ResponseEntity<?> getCheckoutSessionEmail(@RequestParam(value = "sessionId", required = false) String sessionId) {
         return buildEmailResponse(sessionId);
     }
 
     @GetMapping({"/checkout-session/{sessionId}", "/checkout-session-email/{sessionId}", "/session-email/{sessionId}"})
     @ResponseBody
-    public ResponseEntity<Map<String, String>> getCheckoutSessionEmailByPath(@PathVariable String sessionId) {
+    public ResponseEntity<?> getCheckoutSessionEmailByPath(@PathVariable String sessionId) {
         return buildEmailResponse(sessionId);
     }
 
-    private ResponseEntity<Map<String, String>> buildEmailResponse(String sessionId) {
+    private ResponseEntity<?> buildEmailResponse(String sessionId) {
         try {
             if (sessionId == null || sessionId.isBlank()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "sessionId es requerido"));
+                return ResponseEntity.badRequest().body(new ErrorResponse("sessionId es requerido"));
             }
 
             com.stripe.Stripe.apiKey = stripeApiKey;
@@ -110,12 +107,12 @@ public class PaymentController {
             }
 
             if (email == null) {
-                return ResponseEntity.status(404).body(Map.of("error", "Email no encontrado para la sesión"));
+                return ResponseEntity.status(404).body(new ErrorResponse("Email no encontrado para la sesión"));
             }
 
-            return ResponseEntity.ok(Map.of("email", email));
+            return ResponseEntity.ok(new SessionEmailResponse(email));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(new ErrorResponse(e.getMessage()));
         }
     }
 

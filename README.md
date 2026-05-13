@@ -39,9 +39,9 @@ BillingFlow es una aplicación de facturación profesional diseñada para autón
                         └──┬─────────────┬────────────────┘
                            │             │
              ┌─────────────▼─┐     ┌─────▼──────────────┐
-             │ Security Svc  │     │  Customer Service   │
-             │  :9000 (JWT)  │     │  :8082 (usuarios)   │
-             └───────────────┘     └────────┬────────────┘
+             │ Security Svc  │     │  Customer Service  │
+             │  :9000 (JWT)  │     │  :8082 (usuarios)  │
+             └───────────────┘     └────────┬───────────┘
                                             │ MySQL
                                    ┌────────▼────────────┐
                                    │   billingflow_db    │

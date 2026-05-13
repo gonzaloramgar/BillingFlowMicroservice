@@ -110,150 +110,63 @@
                 </div>
 
                 <form class="app-invoice-form" id="invoiceForm" novalidate>
-                    <div class="app-form-grid">
-
-                        <!-- COLUMNA IZQUIERDA -->
-                        <div class="app-form-col">
-                            <div class="app-card">
-                                <h3 class="app-card-title">Datos del emisor</h3>
-                                <div class="app-form-row">
-                                    <div class="app-field">
-                                        <label>Nombre / Razón social *</label>
-                                        <input type="text" id="emisorNombre" placeholder="Tu nombre o empresa" required>
-                                    </div>
-                                    <div class="app-field">
-                                        <label>NIF / CIF *</label>
-                                        <input type="text" id="emisorNif" placeholder="12345678A" required>
-                                    </div>
-                                </div>
-                                <div class="app-field">
-                                    <label>Dirección *</label>
-                                    <input type="text" id="emisorDireccion" placeholder="Calle Mayor 1, 28001 Madrid" required>
-                                </div>
-                                <div class="app-form-row">
-                                    <div class="app-field">
-                                        <label>Email</label>
-                                        <input type="email" id="emisorEmail" placeholder="tu@email.com">
-                                    </div>
-                                    <div class="app-field">
-                                        <label>Teléfono</label>
-                                        <input type="tel" id="emisorTelefono" placeholder="+34 600 123 456">
-                                    </div>
-                                </div>
+                    <div class="app-card">
+                        <h3 class="app-card-title">Campos compatibles con Invoice Service</h3>
+                        <div class="app-form-row">
+                            <div class="app-field">
+                                <label>Número de factura</label>
+                                <input type="text" id="facturaNumero" placeholder="FAC-2026-001" required>
                             </div>
-
-                            <div class="app-card">
-                                <h3 class="app-card-title">Datos del cliente</h3>
-                                <div class="app-form-row">
-                                    <div class="app-field">
-                                        <label>Nombre / Empresa *</label>
-                                        <input type="text" id="clienteNombre" placeholder="Empresa del cliente" required>
-                                    </div>
-                                    <div class="app-field">
-                                        <label>NIF / CIF *</label>
-                                        <input type="text" id="clienteNif" placeholder="B12345678" required>
-                                    </div>
-                                </div>
-                                <div class="app-field">
-                                    <label>Dirección *</label>
-                                    <input type="text" id="clienteDireccion" placeholder="Av. de la Constitución 10, 41001 Sevilla" required>
-                                </div>
-                                <div class="app-form-row">
-                                    <div class="app-field">
-                                        <label>Email del cliente</label>
-                                        <input type="email" id="clienteEmail" placeholder="cliente@empresa.com">
-                                    </div>
-                                    <div class="app-field">
-                                        <label>Teléfono</label>
-                                        <input type="tel" id="clienteTelefono" placeholder="+34 910 000 000">
-                                    </div>
-                                </div>
+                            <div class="app-field">
+                                <label>Cliente (cliente) *</label>
+                                <input type="text" id="invoiceCliente" placeholder="Nombre del cliente" required>
                             </div>
                         </div>
 
-                        <!-- COLUMNA DERECHA -->
-                        <div class="app-form-col">
-                            <div class="app-card">
-                                <h3 class="app-card-title">Datos de la factura</h3>
-                                <div class="app-form-row">
-                                    <div class="app-field">
-                                        <label>Número de factura *</label>
-                                        <input type="text" id="facturaNumero" placeholder="FAC-2026-001" required>
-                                    </div>
-                                    <div class="app-field">
-                                        <label>Fecha de emisión *</label>
-                                        <input type="date" id="facturaFecha" required>
-                                    </div>
-                                </div>
-                                <div class="app-form-row">
-                                    <div class="app-field">
-                                        <label>Fecha de vencimiento</label>
-                                        <input type="date" id="facturaVencimiento">
-                                    </div>
-                                    <div class="app-field">
-                                        <label>IVA aplicable</label>
-                                        <select id="facturaIva">
-                                            <option value="21">21%</option>
-                                            <option value="10">10%</option>
-                                            <option value="4">4%</option>
-                                            <option value="0">0% (exento)</option>
-                                        </select>
-                                    </div>
-                                </div>
+                        <div class="app-form-row">
+                            <div class="app-field">
+                                <label>Fecha de emisión (fechaEmision) *</label>
+                                <input type="date" id="invoiceFechaEmision" required>
                             </div>
-
-                            <div class="app-card">
-                                <div class="app-card-header">
-                                    <h3 class="app-card-title">Líneas de factura</h3>
-                                    <button type="button" class="app-link" id="addLineBtn">+ Añadir línea</button>
-                                </div>
-
-                                <div class="app-invoice-lines-header">
-                                    <span>Descripción</span>
-                                    <span>Cant.</span>
-                                    <span>Precio ud.</span>
-                                    <span>Total</span>
-                                    <span></span>
-                                </div>
-
-                                <div id="invoiceLines">
-                                    <!-- Las líneas se generan con JS -->
-                                </div>
-
-                                <div class="app-invoice-totals">
-                                    <div class="app-totals-row">
-                                        <span>Base imponible</span>
-                                        <strong id="totalBase">€0,00</strong>
-                                    </div>
-                                    <div class="app-totals-row">
-                                        <span>IVA (<span id="ivaLabel">21</span>%)</span>
-                                        <strong id="totalIva">€0,00</strong>
-                                    </div>
-                                    <div class="app-totals-row total-final">
-                                        <span>Total</span>
-                                        <strong id="totalFinal">€0,00</strong>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="app-card">
-                                <h3 class="app-card-title">Notas / Condiciones de pago</h3>
-                                <textarea id="facturaNota" class="app-textarea" placeholder="Ej: Pago a 30 días. Transferencia bancaria a IBAN ES12 3456 7890 1234 5678 90"></textarea>
-                            </div>
-
-                            <div class="app-invoice-actions">
-                                <div class="app-coming-soon-notice" id="comingSoonNotice">
-                                    <span>🔧</span>
-                                    <span>La generación de PDF estará disponible cuando el <strong>Invoice Service</strong> esté activo</span>
-                                </div>
-                                <button type="submit" class="btn-large" id="generateBtn" disabled>
-                                    Generar PDF
-                                </button>
-                                <button type="button" class="btn-secondary" id="saveBtn">
-                                    Guardar borrador
-                                </button>
+                            <div class="app-field">
+                                <label>Monto base (montoBase) *</label>
+                                <input type="number" id="invoiceMontoBase" min="0" step="0.01" placeholder="0.00" required>
                             </div>
                         </div>
+
+                        <div class="app-form-row">
+                            <div class="app-field">
+                                <label>IVA %</label>
+                                <select id="invoiceIvaPercent">
+                                    <option value="21">21%</option>
+                                    <option value="10">10%</option>
+                                    <option value="4">4%</option>
+                                    <option value="0">0%</option>
+                                </select>
+                            </div>
+                            <div class="app-field">
+                                <label>IVA (iva)</label>
+                                <input type="number" id="invoiceIva" step="0.01" readonly>
+                            </div>
+                        </div>
+
+                        <div class="app-field">
+                            <label>Total (total)</label>
+                            <input type="number" id="invoiceTotal" step="0.01" readonly>
+                        </div>
+                    </div>
+
+                    <div class="app-invoice-actions">
+                        <div class="app-coming-soon-notice" id="comingSoonNotice">
+                            <span>✅</span>
+                            <span>Factura conectada al <strong>Invoice Service</strong>. Los campos enviados son: cliente, montoBase, iva, total, fechaEmision.</span>
+                        </div>
+                        <button type="submit" class="btn-large" id="generateBtn">
+                            Generar PDF
+                        </button>
+                        <button type="button" class="btn-secondary" id="saveBtn">
+                            Guardar borrador
+                        </button>
                     </div>
                 </form>
             </section>
@@ -358,9 +271,6 @@
                     </div>
                 </div>
             </section>
-
-        </main>
-    </div>
 
             <!-- ======= VISTA: ADMIN ======= -->
             <section class="app-view" id="view-admin" style="display:none">

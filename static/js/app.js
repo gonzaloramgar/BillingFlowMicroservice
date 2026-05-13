@@ -2,7 +2,7 @@
 //  BillingFlow — App logic
 //  API base preparada para el futuro invoice-service
 // ============================================================
-const INVOICE_API = 'http://localhost:8083/api/invoices'; // invoice-service (pendiente)
+const INVOICE_API = 'http://localhost:8083/api/facturas';
 const CUSTOMER_API = 'http://localhost:8082/api/customers';
 
 // ---- AUTH CHECK ----
@@ -13,12 +13,67 @@ if (!raw) {
 const currentUser = raw ? JSON.parse(raw) : null;
 
 // ---- STATE ----
-// Facturas en memoria (localStorage) hasta que invoice-service esté activo
+// Borradores locales + facturas persistidas en invoice-service
 const DRAFTS_KEY = 'billingflow_drafts';
 let drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '[]');
+let serverInvoices = [];
 
 function saveDrafts() {
     localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+}
+
+async function fetchInvoicesFromServer() {
+    try {
+        const res = await fetch(INVOICE_API, { headers: { 'Content-Type': 'application/json' } });
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        const data = await res.json();
+        serverInvoices = Array.isArray(data) ? data : [];
+        setInvoiceServiceNotice(true);
+    } catch (error) {
+        serverInvoices = [];
+        setInvoiceServiceNotice(false, error.message);
+    }
+}
+
+function mapServerInvoice(invoice) {
+    const id = invoice?.id;
+    const date = typeof invoice?.fechaEmision === 'string' ? invoice.fechaEmision.split('T')[0] : '';
+
+    return {
+        id: `srv-${id}`,
+        serverId: id,
+        numero: `FAC-${String(id).padStart(5, '0')}`,
+        clienteNombre: invoice?.cliente || 'Cliente',
+        fecha: date,
+        total: Number(invoice?.total || 0),
+        status: 'paid',
+        source: 'server'
+    };
+}
+
+function getAllInvoices() {
+    const remote = serverInvoices.map(mapServerInvoice);
+    return [...remote, ...drafts];
+}
+
+function setInvoiceServiceNotice(isOnline, details = '') {
+    const notice = document.getElementById('comingSoonNotice');
+    const generateBtn = document.getElementById('generateBtn');
+    if (!notice || !generateBtn) return;
+
+    if (isOnline) {
+        notice.innerHTML = '<span>✅</span><span>Factura conectada al <strong>Invoice Service</strong>. Al generar, se descargará el PDF automáticamente.</span>';
+        notice.style.borderColor = 'rgba(16,185,129,0.35)';
+        notice.style.background = 'rgba(16,185,129,0.1)';
+        notice.style.color = '#6ee7b7';
+        generateBtn.disabled = false;
+    } else {
+        notice.innerHTML = `<span>⚠️</span><span>No se pudo conectar con <strong>Invoice Service</strong>${details ? ` (${escHtml(details)})` : ''}. Puedes guardar borradores.</span>`;
+        notice.style.borderColor = 'rgba(245,158,11,0.3)';
+        notice.style.background = 'rgba(245,158,11,0.1)';
+        notice.style.color = '#fcd34d';
+        generateBtn.disabled = true;
+    }
 }
 
 // ---- NAVIGATION ----
@@ -84,7 +139,7 @@ document.getElementById('profileLogoutBtn').addEventListener('click', logout);
 
 // ---- DASHBOARD ----
 function renderDashboard() {
-    const all = drafts;
+    const all = getAllInvoices();
     const paid = all.filter(f => f.status === 'paid');
     const pending = all.filter(f => f.status === 'pending');
     const now = new Date();
@@ -121,7 +176,7 @@ function renderDashboard() {
 // ---- INVOICE LIST ----
 function renderInvoiceList(filter = 'all', search = '') {
     const wrapper = document.getElementById('invoiceTableWrapper');
-    let list = [...drafts].reverse();
+    let list = [...getAllInvoices()].reverse();
 
     if (filter !== 'all') list = list.filter(f => f.status === filter);
     if (search) {
@@ -147,10 +202,11 @@ function renderInvoiceList(filter = 'all', search = '') {
 
     wrapper.innerHTML = buildInvoiceTable(list, true);
     wrapper.querySelectorAll('.app-delete-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
             const id = btn.dataset.id;
-            drafts = drafts.filter(f => f.id !== id);
-            saveDrafts();
+            const ok = await deleteInvoiceById(id);
+            if (!ok) return;
+
             renderInvoiceList(
                 document.getElementById('invoiceFilter').value,
                 document.getElementById('invoiceSearch').value
@@ -159,6 +215,25 @@ function renderInvoiceList(filter = 'all', search = '') {
             showToast('Factura eliminada');
         });
     });
+}
+
+async function deleteInvoiceById(id) {
+    if (id.startsWith('srv-')) {
+        const serverId = id.replace('srv-', '');
+        try {
+            const res = await fetch(`${INVOICE_API}/${serverId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error(`Error ${res.status}`);
+            await fetchInvoicesFromServer();
+            return true;
+        } catch (error) {
+            showToast('No se pudo eliminar en servidor: ' + error.message, 'error');
+            return false;
+        }
+    }
+
+    drafts = drafts.filter(f => f.id !== id);
+    saveDrafts();
+    return true;
 }
 
 function buildInvoiceTable(list, withActions = false) {
@@ -172,7 +247,7 @@ function buildInvoiceTable(list, withActions = false) {
             <td>${formatDate(f.fecha)}</td>
             <td>€${(f.total || 0).toFixed(2).replace('.', ',')}</td>
             <td><span class="app-status-tag ${statusClass[f.status] || ''}">${statusLabel[f.status] || f.status}</span></td>
-            ${withActions ? `<td><button class="app-icon-btn app-delete-btn" data-id="${f.id}" title="Eliminar">🗑</button></td>` : ''}
+            ${withActions ? `<td><button class="app-action-btn app-action-btn--danger app-delete-btn" data-id="${f.id}" title="Eliminar factura">Eliminar</button></td>` : ''}
         </tr>`).join('');
 
     return `
@@ -200,136 +275,114 @@ document.getElementById('invoiceFilter').addEventListener('change', e => {
 });
 
 // ---- INVOICE FORM ----
-let lineCounter = 0;
-
-function addLine(desc = '', qty = 1, price = 0) {
-    lineCounter++;
-    const id = `line-${lineCounter}`;
-    const div = document.createElement('div');
-    div.className = 'app-invoice-line';
-    div.dataset.lineId = id;
-    div.innerHTML = `
-        <input type="text" class="line-desc" placeholder="Descripción del servicio" value="${desc}">
-        <input type="number" class="line-qty" min="1" value="${qty}" placeholder="1">
-        <input type="number" class="line-price" min="0" step="0.01" value="${price || ''}" placeholder="0,00">
-        <span class="line-total">€0,00</span>
-        <button type="button" class="app-icon-btn line-remove" title="Eliminar línea">✕</button>`;
-
-    div.querySelector('.line-remove').addEventListener('click', () => {
-        div.remove();
-        recalcTotals();
-    });
-
-    ['line-qty', 'line-price'].forEach(cls => {
-        div.querySelector(`.${cls}`).addEventListener('input', recalcTotals);
-    });
-
-    document.getElementById('invoiceLines').appendChild(div);
-    recalcTotals();
-}
-
-function recalcTotals() {
-    let base = 0;
-    document.querySelectorAll('.app-invoice-line').forEach(line => {
-        const qty = parseFloat(line.querySelector('.line-qty').value) || 0;
-        const price = parseFloat(line.querySelector('.line-price').value) || 0;
-        const lineTotal = qty * price;
-        line.querySelector('.line-total').textContent = '€' + lineTotal.toFixed(2).replace('.', ',');
-        base += lineTotal;
-    });
-
-    const ivaPct = parseFloat(document.getElementById('facturaIva').value) || 0;
+function recalcInvoiceTotals() {
+    const base = parseFloat(document.getElementById('invoiceMontoBase').value) || 0;
+    const ivaPct = parseFloat(document.getElementById('invoiceIvaPercent').value) || 0;
     const iva = base * ivaPct / 100;
     const total = base + iva;
 
-    document.getElementById('ivaLabel').textContent = ivaPct;
-    document.getElementById('totalBase').textContent = '€' + base.toFixed(2).replace('.', ',');
-    document.getElementById('totalIva').textContent = '€' + iva.toFixed(2).replace('.', ',');
-    document.getElementById('totalFinal').textContent = '€' + total.toFixed(2).replace('.', ',');
+    document.getElementById('invoiceIva').value = iva.toFixed(2);
+    document.getElementById('invoiceTotal').value = total.toFixed(2);
 }
 
-document.getElementById('addLineBtn').addEventListener('click', () => addLine());
-document.getElementById('facturaIva').addEventListener('change', recalcTotals);
+document.getElementById('invoiceMontoBase').addEventListener('input', recalcInvoiceTotals);
+document.getElementById('invoiceIvaPercent').addEventListener('change', recalcInvoiceTotals);
 
 // Autocompletar número de factura con fecha de hoy
 function initInvoiceForm() {
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
-    document.getElementById('facturaFecha').value = dateStr;
+    document.getElementById('invoiceFechaEmision').value = dateStr;
 
     const month = String(now.getMonth() + 1).padStart(2, '0');
-    const nextNum = String(drafts.length + 1).padStart(3, '0');
+    const nextNum = String(getAllInvoices().length + 1).padStart(3, '0');
     document.getElementById('facturaNumero').value = `FAC-${now.getFullYear()}${month}-${nextNum}`;
 
-    // Prellenar email del emisor
-    if (currentUser?.email) {
-        document.getElementById('emisorEmail').value = currentUser.email;
-    }
-    if (currentUser) {
-        const fullName = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim();
-        document.getElementById('emisorNombre').value = fullName;
-    }
-
-    // Añadir una línea por defecto
-    document.getElementById('invoiceLines').innerHTML = '';
-    lineCounter = 0;
-    addLine('', 1, 0);
+    document.getElementById('invoiceCliente').value = '';
+    document.getElementById('invoiceMontoBase').value = '';
+    document.getElementById('invoiceIvaPercent').value = '21';
+    recalcInvoiceTotals();
 }
 
 // Guardar borrador
 document.getElementById('saveBtn').addEventListener('click', () => {
     const draft = collectFormData();
-    if (!draft.clienteNombre && !draft.numero) {
+    if (!draft.clienteNombre || !draft.numero) {
         showToast('Rellena al menos el número de factura y el cliente', 'error');
         return;
     }
     draft.status = 'draft';
     draft.id = 'draft-' + Date.now();
+    draft.source = 'draft';
     drafts.push(draft);
     saveDrafts();
     showToast('Borrador guardado ✓');
     navigate('mis-facturas');
 });
 
-// Envío del formulario (futuro invoice-service)
+// Envío del formulario al invoice-service + descarga del PDF
 document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    showToast('El Invoice Service aún no está activo. Guardado como borrador.', 'warning');
+
+    const generateBtn = document.getElementById('generateBtn');
+    generateBtn.disabled = true;
+    generateBtn.textContent = 'Generando PDF...';
+
+    try {
+        const form = collectFormData();
+        if (!form.clienteNombre || !form.total) {
+            showToast('Completa cliente y monto base antes de generar', 'error');
+            return;
+        }
+
+        const payload = {
+            cliente: form.clienteNombre,
+            montoBase: form.base,
+            iva: form.iva,
+            total: form.total,
+            fechaEmision: form.fecha ? `${form.fecha}T00:00:00` : null
+        };
+
+        const response = await fetch(INVOICE_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const fileName = getFileNameFromHeaders(response.headers) || `factura_${Date.now()}.pdf`;
+        downloadBlob(blob, fileName);
+
+        await fetchInvoicesFromServer();
+        renderDashboard();
+        showToast('Factura generada y PDF descargado ✓');
+        navigate('mis-facturas');
+    } catch (error) {
+        showToast('No se pudo generar la factura: ' + error.message, 'error');
+    } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generar PDF';
+    }
 });
 
 function collectFormData() {
-    const lines = [];
-    document.querySelectorAll('.app-invoice-line').forEach(line => {
-        lines.push({
-            descripcion: line.querySelector('.line-desc').value,
-            cantidad: parseFloat(line.querySelector('.line-qty').value) || 0,
-            precio: parseFloat(line.querySelector('.line-price').value) || 0,
-        });
-    });
-
-    const base = lines.reduce((s, l) => s + l.cantidad * l.precio, 0);
-    const ivaPct = parseFloat(document.getElementById('facturaIva').value) || 0;
-    const total = base + base * ivaPct / 100;
+    const base = parseFloat(document.getElementById('invoiceMontoBase').value) || 0;
+    const ivaPct = parseFloat(document.getElementById('invoiceIvaPercent').value) || 0;
+    const iva = parseFloat(document.getElementById('invoiceIva').value) || 0;
+    const total = parseFloat(document.getElementById('invoiceTotal').value) || 0;
 
     return {
         numero: document.getElementById('facturaNumero').value,
-        fecha: document.getElementById('facturaFecha').value,
-        vencimiento: document.getElementById('facturaVencimiento').value,
-        emisorNombre: document.getElementById('emisorNombre').value,
-        emisorNif: document.getElementById('emisorNif').value,
-        emisorDireccion: document.getElementById('emisorDireccion').value,
-        emisorEmail: document.getElementById('emisorEmail').value,
-        emisorTelefono: document.getElementById('emisorTelefono').value,
-        clienteNombre: document.getElementById('clienteNombre').value,
-        clienteNif: document.getElementById('clienteNif').value,
-        clienteDireccion: document.getElementById('clienteDireccion').value,
-        clienteEmail: document.getElementById('clienteEmail').value,
-        clienteTelefono: document.getElementById('clienteTelefono').value,
-        iva: ivaPct,
+        fecha: document.getElementById('invoiceFechaEmision').value,
+        clienteNombre: document.getElementById('invoiceCliente').value,
+        ivaPct,
+        iva,
         base,
         total,
-        nota: document.getElementById('facturaNota').value,
-        lineas: lines,
         status: 'pending',
     };
 }
@@ -354,11 +407,33 @@ function formatDate(iso) {
     return `${d}/${m}/${y}`;
 }
 
+function getFileNameFromHeaders(headers) {
+    const disposition = headers.get('content-disposition') || '';
+    const match = disposition.match(/filename="?([^";]+)"?/i);
+    return match ? match[1] : null;
+}
+
+function downloadBlob(blob, fileName) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
 // ---- INIT ----
-initUser();
-initInvoiceForm();
-initAdminPanel();
-navigate('dashboard');
+async function initializeApp() {
+    initUser();
+    initInvoiceForm();
+    initAdminPanel();
+    await fetchInvoicesFromServer();
+    navigate('dashboard');
+}
+
+initializeApp();
 
 // ============================================================
 //  ADMIN PANEL
@@ -451,8 +526,8 @@ function renderAdminTable(filter = 'all', search = '') {
             }</td>
             <td>
                 <div class="admin-actions">
-                    <button class="app-icon-btn admin-edit-btn" data-id="${u.id}" title="Editar">✏️</button>
-                    <button class="app-icon-btn admin-delete-btn" data-id="${u.id}" ${isSelf(u.id) ? 'disabled title="No puedes eliminarte a ti mismo"' : 'title="Eliminar usuario"'}>🗑</button>
+                    <button class="app-action-btn admin-edit-btn" data-id="${u.id}" title="Editar usuario">Editar</button>
+                    <button class="app-action-btn app-action-btn--danger admin-delete-btn" data-id="${u.id}" ${isSelf(u.id) ? 'disabled title="No puedes eliminarte a ti mismo"' : 'title="Eliminar usuario"'}>Eliminar</button>
                 </div>
             </td>
         </tr>`).join('');

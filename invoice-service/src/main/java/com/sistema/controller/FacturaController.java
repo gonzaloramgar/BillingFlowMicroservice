@@ -1,5 +1,7 @@
 package com.sistema.controller;
 
+import com.sistema.dto.FacturaRequest;
+import com.sistema.dto.FacturaResponse;
 import com.sistema.model.Factura;
 import com.sistema.repository.FacturaRepository;
 import org.apache.fop.apps.Fop;
@@ -16,8 +18,10 @@ import java.io.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
+@CrossOrigin(origins = {"http://127.0.0.1:5500", "http://localhost:5500", "http://127.0.0.1:5501", "http://localhost:5501"})
 @RequestMapping("/api/facturas")
 public class FacturaController {
 
@@ -26,8 +30,10 @@ public class FacturaController {
 
     // 1. CREAR FACTURA Y GENERAR PDF (POST)
     @PostMapping
-    public ResponseEntity<byte[]> crearFactura(@RequestBody Factura factura) {
+    public ResponseEntity<byte[]> crearFactura(@RequestBody FacturaRequest request) {
         try {
+            Factura factura = toEntity(request);
+
             // Lógica de negocio: asegurar que los cálculos existan
             if (factura.getMontoBase() == null) factura.setMontoBase(0.0);
             if (factura.getIva() == null) factura.setIva(factura.getMontoBase() * 0.21);
@@ -71,8 +77,11 @@ public class FacturaController {
 
     // 3. LISTAR TODAS LAS FACTURAS EN JSON (GET)
     @GetMapping
-    public List<Factura> listarTodas() {
-        return repository.findAll();
+    public List<FacturaResponse> listarTodas() {
+        return repository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
     // 4. ELIMINAR FACTURA (DELETE)
@@ -136,5 +145,26 @@ public class FacturaController {
         headers.setContentDisposition(ContentDisposition.builder("attachment").filename(filename).build());
 
         return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+    }
+
+    private Factura toEntity(FacturaRequest request) {
+        Factura factura = new Factura();
+        factura.setCliente(request.getCliente());
+        factura.setMontoBase(request.getMontoBase());
+        factura.setIva(request.getIva());
+        factura.setTotal(request.getTotal());
+        factura.setFechaEmision(request.getFechaEmision());
+        return factura;
+    }
+
+    private FacturaResponse toResponse(Factura factura) {
+        FacturaResponse response = new FacturaResponse();
+        response.setId(factura.getId());
+        response.setCliente(factura.getCliente());
+        response.setMontoBase(factura.getMontoBase());
+        response.setIva(factura.getIva());
+        response.setTotal(factura.getTotal());
+        response.setFechaEmision(factura.getFechaEmision());
+        return response;
     }
 }
