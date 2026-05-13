@@ -1516,6 +1516,32 @@ body.legal-page {
     height: 58px;
 }
 
+.app-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.78), rgba(15, 23, 42, 0.78));
+    box-shadow: 0 8px 18px rgba(2, 6, 23, 0.24);
+}
+
+.app-logo .logo-img {
+    height: 30px;
+    width: auto;
+    max-width: 132px;
+    display: block;
+    object-fit: contain;
+}
+
+.app-logo:hover {
+    transform: translateY(0);
+    border-color: rgba(148, 163, 184, 0.34);
+    box-shadow: 0 10px 20px rgba(2, 6, 23, 0.3);
+}
+
 .app-topbar-right {
     display: flex;
     align-items: center;
@@ -2024,6 +2050,16 @@ body.legal-page {
 .app-toast--warning { border-color: rgba(245,158,11,0.3); color: #fcd34d; }
 
 @media (max-width: 900px) {
+    .app-logo {
+        height: 38px;
+        padding: 3px 8px;
+        border-radius: 10px;
+    }
+    .app-logo .logo-img {
+        height: 26px;
+        max-width: 116px;
+    }
+
     .app-sidebar {
         width: 60px;
         padding: 16px 8px;
@@ -2034,6 +2070,19 @@ body.legal-page {
     .app-profile-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {
+    .app-topbar {
+        padding: 10px 14px;
+    }
+    .app-logo {
+        height: 34px;
+        padding: 2px 7px;
+        border-radius: 9px;
+    }
+    .app-logo .logo-img {
+        height: 22px;
+        max-width: 100px;
+    }
+
     .app-stats-grid { grid-template-columns: 1fr 1fr; }
     .app-form-row { grid-template-columns: 1fr; }
 }

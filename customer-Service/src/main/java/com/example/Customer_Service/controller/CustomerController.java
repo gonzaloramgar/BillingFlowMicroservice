@@ -1,5 +1,6 @@
 package com.example.Customer_Service.controller;
 
+// Nota: controlador REST, expone endpoints HTTP del servicio.
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,16 +34,20 @@ public class CustomerController {
 
     // Endpoint para el registro
     @PostMapping("/register")
-    public ResponseEntity<CustomerResponse> register(@RequestBody RegisterCustomerRequest request) {
-        Customer customer = new Customer();
-        customer.setFirstName(request.getFirstName());
-        customer.setLastName(request.getLastName());
-        customer.setEmail(request.getEmail());
-        customer.setPassword(request.getPassword());
-        customer.setRole(request.getRole());
+    public ResponseEntity<?> register(@RequestBody RegisterCustomerRequest request) {
+        try {
+            Customer customer = new Customer();
+            customer.setFirstName(request.getFirstName());
+            customer.setLastName(request.getLastName());
+            customer.setEmail(request.getEmail());
+            customer.setPassword(request.getPassword());
+            customer.setRole(request.getRole());
 
-        Customer created = customerService.registerCustomer(customer);
-        return ResponseEntity.ok(toResponse(created));
+            Customer created = customerService.registerCustomer(customer);
+            return ResponseEntity.ok(toResponse(created));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(400).body(new MessageResponse(e.getMessage()));
+        }
     }
 
     // Endpoint para la verificación (2FA)
@@ -139,3 +144,4 @@ public class CustomerController {
                 .build();
     }
 }
+

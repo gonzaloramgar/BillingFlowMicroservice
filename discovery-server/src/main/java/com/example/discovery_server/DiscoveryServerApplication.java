@@ -1,5 +1,6 @@
 package com.example.discovery_server;
 
+// Nota: punto de entrada Spring Boot del microservicio.
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
@@ -13,3 +14,5 @@ public class DiscoveryServerApplication {
 	}
 
 }
+
+

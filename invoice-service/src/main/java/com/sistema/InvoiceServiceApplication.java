@@ -1,5 +1,6 @@
 package com.sistema;
 
+// Nota: punto de entrada Spring Boot del microservicio.
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -14,3 +15,4 @@ public class InvoiceServiceApplication {
     }
 
 }
+

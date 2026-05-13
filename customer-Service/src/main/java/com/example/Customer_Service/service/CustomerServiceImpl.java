@@ -1,5 +1,6 @@
 package com.example.Customer_Service.service;
 
+// Nota: logica principal de clientes, registro/login/verificacion por codigo.
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -50,9 +51,10 @@ public class CustomerServiceImpl implements CustomerService {
             System.out.println("Correo enviado. Usuario guardado en MEMORIA TEMPORAL: " + customer.getEmail());
         } catch (Exception e) {
             System.err.println("Error al enviar el correo: " + e.getMessage());
+            throw new RuntimeException("No se pudo enviar el codigo de verificacion. Revisa el email e intentalo de nuevo.");
         }
 
-        // 3. GUARDAR EN MEMORIA
+        // 3. GUARDAR EN MEMORIA solo si el envio fue correcto
         pendingCustomers.put(customer.getEmail(), customer);
 
         return customer;
@@ -165,3 +167,4 @@ public class CustomerServiceImpl implements CustomerService {
             .orElseThrow(() -> new RuntimeException("Credenciales incorrectas o cuenta no verificada"));
     }
 }
+

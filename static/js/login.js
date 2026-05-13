@@ -1,4 +1,4 @@
-const CUSTOMER_API_BASE = 'http://localhost:8082/api/customers';
+const SECURITY_API_BASE = 'http://localhost:9000/api/auth';
 
 const loginForm = document.getElementById('loginForm');
 const loginBtn = document.getElementById('loginBtn');
@@ -31,7 +31,7 @@ loginForm.addEventListener('submit', async (event) => {
     loginBtn.textContent = 'Entrando...';
 
     try {
-        const response = await fetch(`${CUSTOMER_API_BASE}/login`, {
+        const response = await fetch(`${SECURITY_API_BASE}/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -50,6 +50,7 @@ loginForm.addEventListener('submit', async (event) => {
                 localStorage.setItem('currentCustomer', JSON.stringify(user));
                 localStorage.setItem('currentCustomerEmail', user.email || '');
                 localStorage.setItem('currentCustomerRole', user.role || 'USER');
+                localStorage.setItem('currentCustomerToken', user.token || '');
             }
 
             loginForm.style.display = 'none';
@@ -64,7 +65,7 @@ loginForm.addEventListener('submit', async (event) => {
 
         showError(responseText || 'No se pudo iniciar sesión. Verifica tus credenciales.');
     } catch (error) {
-        showError('Error de conexión con customer-service en el puerto 8082.');
+        showError('Error de conexión con security-service en el puerto 9000.');
     } finally {
         loginBtn.disabled = false;
         loginBtn.textContent = 'Entrar';

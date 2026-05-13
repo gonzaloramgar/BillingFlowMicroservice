@@ -1,13 +1,19 @@
 package com.sistema.controller;
 
+// Nota: controlador REST, expone endpoints HTTP del servicio.
 import com.sistema.dto.FacturaRequest;
 import com.sistema.dto.FacturaResponse;
 import com.sistema.model.Factura;
 import com.sistema.repository.FacturaRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import org.apache.fop.apps.Fop;
 import org.apache.fop.apps.FopFactory;
 import org.apache.fop.apps.MimeConstants;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +21,7 @@ import javax.xml.transform.*;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
+import java.security.Key;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -28,11 +35,24 @@ public class FacturaController {
     @Autowired
     private FacturaRepository repository;
 
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+
     // 1. CREAR FACTURA Y GENERAR PDF (POST)
     @PostMapping
-    public ResponseEntity<byte[]> crearFactura(@RequestBody FacturaRequest request) {
+    public ResponseEntity<byte[]> crearFactura(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody FacturaRequest request) {
         try {
+            // ownerEmail identifica al usuario autenticado que será dueño de la factura.
+            String ownerEmail = extractAuthenticatedEmail(authHeader);
+            if (ownerEmail == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
             Factura factura = toEntity(request);
+            // Seguridad: ownerEmail identifica al usuario dueño, cliente es el dato visible de la factura.
+            factura.setOwnerEmail(ownerEmail);
 
             // Lógica de negocio: asegurar que los cálculos existan
             if (factura.getMontoBase() == null) factura.setMontoBase(0.0);
@@ -59,9 +79,17 @@ public class FacturaController {
 
     // 2. RECUPERAR PDF DE UNA FACTURA EXISTENTE (GET)
     @GetMapping("/{id}")
-    public ResponseEntity<byte[]> obtenerPdfFactura(@PathVariable Long id) {
+    public ResponseEntity<byte[]> obtenerPdfFactura(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Long id) {
         try {
-            Optional<Factura> facturaOpt = repository.findById(id);
+            // Seguridad por recurso: solo el propietario puede recuperar el PDF por id.
+            String ownerEmail = extractAuthenticatedEmail(authHeader);
+            if (ownerEmail == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            Optional<Factura> facturaOpt = repository.findVisibleByIdAndOwnerEmail(id, ownerEmail);
             if (facturaOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
@@ -77,21 +105,68 @@ public class FacturaController {
 
     // 3. LISTAR TODAS LAS FACTURAS EN JSON (GET)
     @GetMapping
-    public List<FacturaResponse> listarTodas() {
-        return repository.findAll()
+    public ResponseEntity<List<FacturaResponse>> listarTodas(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        String ownerEmail = extractAuthenticatedEmail(authHeader);
+        if (ownerEmail == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        // Incluye fallback para facturas legacy donde ownerEmail era null y cliente guardaba el email.
+        List<FacturaResponse> facturas = repository.findVisibleByOwnerEmail(ownerEmail)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(facturas);
+    }
+
+    private Key getSignKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     // 4. ELIMINAR FACTURA (DELETE)
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarFactura(@PathVariable Long id) {
-        if (!repository.existsById(id)) {
+    public ResponseEntity<Void> eliminarFactura(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Long id) {
+        String ownerEmail = extractAuthenticatedEmail(authHeader);
+        if (ownerEmail == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // Bloquea borrados por enumeración de IDs entre usuarios.
+        if (!repository.existsVisibleByIdAndOwnerEmail(id, ownerEmail)) {
             return ResponseEntity.notFound().build();
         }
         repository.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private String extractAuthenticatedEmail(String authHeader) {
+        if (authHeader == null || authHeader.isEmpty()) {
+            return null;
+        }
+
+        try {
+            // Admite formato Bearer y token plano para pruebas manuales.
+            String token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
+            Claims claims = Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(token).getBody();
+
+            // Orden de prioridad para compatibilidad con distintos emisores de JWT.
+            String subject = claims.getSubject();
+            if (subject != null && !subject.isBlank()) {
+                return subject;
+            }
+
+            String emailClaim = claims.get("email", String.class);
+            if (emailClaim != null && !emailClaim.isBlank()) {
+                return emailClaim;
+            }
+
+            return claims.get("correo", String.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     // --- MÉTODOS DE APOYO (PRIVATE) ---
@@ -119,11 +194,11 @@ public class FacturaController {
     private ResponseEntity<byte[]> generarPdfResponse(String xml, String filename) throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         
-        // Configurar FOP
+        // Apache FOP: transforma XSL-FO a binario PDF.
         FopFactory fopFactory = FopFactory.newInstance(new File(".").toURI());
         Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, out);
         
-        // Configurar Transformación
+        // La plantilla XSL define visualmente la factura final.
         TransformerFactory factory = TransformerFactory.newInstance();
         InputStream xslStream = getClass().getResourceAsStream("/plantilla.xsl");
         
@@ -133,7 +208,7 @@ public class FacturaController {
 
         Transformer transformer = factory.newTransformer(new StreamSource(xslStream));
         
-        // Ejecutar transformación
+        // Pipeline: XML de factura -> XSL-FO -> PDF.
         Source src = new StreamSource(new StringReader(xml));
         Result res = new SAXResult(fop.getDefaultHandler());
         transformer.transform(src, res);
@@ -168,3 +243,4 @@ public class FacturaController {
         return response;
     }
 }
+

@@ -1,5 +1,6 @@
 package com.example.payment_service.controller;
 
+// Nota: controlador REST, expone endpoints HTTP del servicio.
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,7 @@ public class WebhookController {
     @PostMapping("/stripe")
     public ResponseEntity<String> handle(@RequestBody String payload, @RequestHeader("Stripe-Signature") String sig) {
         try {
-            // 1. Validar la firma del evento para seguridad
+            // Valida firma HMAC: evita aceptar webhooks falsificados.
             Event event = Webhook.constructEvent(payload, sig, endpointSecret);
 
             // 2. Procesar solo cuando la sesión de pago se ha completado con éxito
@@ -37,12 +38,12 @@ public class WebhookController {
                 EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
                 StripeObject stripeObject = dataObjectDeserializer.getObject().orElse(null);
 
-                // Intento de recuperación estándar
+                // Camino normal: Stripe SDK consigue mapear el payload a Session.
                 if (stripeObject instanceof Session) {
                     Session session = (Session) stripeObject;
                     saveToDatabase(session);
                 } 
-                // Plan B: Si la deserialización directa falla por versiones de API
+                // Fallback para diferencias de versionado/API en eventos.
                 else if (event.getData() != null && event.getData().getObject() != null) {
                     Session session = (Session) event.getData().getObject();
                     saveToDatabase(session);
@@ -76,3 +77,4 @@ public class WebhookController {
         System.out.println("💾 ¡GUARDADO EN MYSQL! Correo del cliente: " + emailCapturado);
     }
 }
+

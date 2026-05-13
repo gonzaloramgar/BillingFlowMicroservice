@@ -1,5 +1,6 @@
 package com.example.payment_service.controller;
 
+// Nota: controlador REST, expone endpoints HTTP del servicio.
 import com.example.payment_service.dto.CreateSessionRequest;
 import com.example.payment_service.dto.CreateSessionResponse;
 import com.example.payment_service.dto.ErrorResponse;
@@ -156,3 +157,4 @@ public class PaymentController {
         }
     }
 }
+

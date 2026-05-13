@@ -1,5 +1,6 @@
 package com.sistema.model;
 
+// Nota: modelo de dominio persistido en base de datos.
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -12,6 +13,10 @@ public class Factura {
     private Long id;
 
     private String cliente;
+
+    @Column(name = "owner_email")
+    private String ownerEmail;
+
     private Double montoBase;
     private Double iva;
     private Double total;
@@ -34,6 +39,9 @@ public class Factura {
     public String getCliente() { return cliente; }
     public void setCliente(String cliente) { this.cliente = cliente; }
 
+    public String getOwnerEmail() { return ownerEmail; }
+    public void setOwnerEmail(String ownerEmail) { this.ownerEmail = ownerEmail; }
+
     public Double getMontoBase() { return montoBase; }
     public void setMontoBase(Double montoBase) { this.montoBase = montoBase; }
 
@@ -46,3 +54,4 @@ public class Factura {
     public LocalDateTime getFechaEmision() { return fechaEmision; }
     public void setFechaEmision(LocalDateTime fechaEmision) { this.fechaEmision = fechaEmision; }
 }
+

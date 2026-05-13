@@ -1,5 +1,6 @@
 package com.example.config_server.dto;
 
+// Nota: DTO para intercambio de datos entre capas/servicios.
 public class ServiceInfoDto {
     private String serviceName;
     private String status;
@@ -28,3 +29,5 @@ public class ServiceInfoDto {
         this.status = status;
     }
 }
+
+

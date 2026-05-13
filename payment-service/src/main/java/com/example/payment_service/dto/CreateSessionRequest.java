@@ -1,5 +1,6 @@
 package com.example.payment_service.dto;
 
+// Nota: DTO para intercambio de datos entre capas/servicios.
 public class CreateSessionRequest {
     private Long amount;
     private String successUrl;
@@ -32,3 +33,5 @@ public class CreateSessionRequest {
         this.cancelUrl = cancelUrl;
     }
 }
+
+

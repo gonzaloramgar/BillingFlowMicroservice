@@ -1,5 +1,6 @@
 package com.example.api_gateway;
 
+// Nota: punto de entrada Spring Boot del microservicio.
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -11,3 +12,5 @@ public class ApiGatewayApplication {
         SpringApplication.run(ApiGatewayApplication.class, args);
     }
 }
+
+

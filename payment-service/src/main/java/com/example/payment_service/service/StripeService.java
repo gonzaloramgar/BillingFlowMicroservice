@@ -1,5 +1,6 @@
 package com.example.payment_service.service;
 
+// Nota: integracion con Stripe (Checkout Session y consulta de estado).
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import com.stripe.exception.StripeException;
@@ -22,3 +23,5 @@ public class StripeService {
         return Session.create(params).getUrl();
     }
 }
+
+

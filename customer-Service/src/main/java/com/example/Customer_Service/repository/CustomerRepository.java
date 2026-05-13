@@ -1,5 +1,6 @@
 package com.example.Customer_Service.repository;
 
+// Nota: repositorio JPA para consultas y persistencia.
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,3 +16,5 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     // Método para buscar por el código de verificación
     Optional<Customer> findByVerificationCode(String code);
 }
+
+

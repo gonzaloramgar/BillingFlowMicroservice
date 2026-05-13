@@ -1,5 +1,6 @@
 package com.example.payment_service.dto;
 
+// Nota: DTO para intercambio de datos entre capas/servicios.
 public class SessionEmailResponse {
     private String email;
 
@@ -18,3 +19,5 @@ public class SessionEmailResponse {
         this.email = email;
     }
 }
+
+

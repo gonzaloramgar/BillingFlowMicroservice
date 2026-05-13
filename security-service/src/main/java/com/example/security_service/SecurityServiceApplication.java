@@ -1,5 +1,6 @@
 package com.example.security_service;
 
+// Nota: punto de entrada Spring Boot del microservicio.
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient; // Añade esto
@@ -11,3 +12,4 @@ public class SecurityServiceApplication {
         SpringApplication.run(SecurityServiceApplication.class, args);
     }
 }
+

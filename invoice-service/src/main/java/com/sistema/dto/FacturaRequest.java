@@ -1,5 +1,6 @@
 package com.sistema.dto;
 
+// Nota: DTO para intercambio de datos entre capas/servicios.
 import java.time.LocalDateTime;
 
 public class FacturaRequest {
@@ -49,3 +50,5 @@ public class FacturaRequest {
         this.fechaEmision = fechaEmision;
     }
 }
+
+

@@ -1,5 +1,6 @@
 package com.example.payment_service.model;
 
+// Nota: modelo de dominio persistido en base de datos.
 import java.time.LocalDateTime;
 
 
@@ -42,3 +43,5 @@ public class PaymentTransaction {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
+
+

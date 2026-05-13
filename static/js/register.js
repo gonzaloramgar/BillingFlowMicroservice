@@ -18,6 +18,9 @@ const emailLockNotice = document.getElementById('emailLockNotice');
 const urlParams = new URLSearchParams(window.location.search);
 const paymentSessionId = urlParams.get('session_id');
 const fromPaymentFlow = urlParams.get('fromPayment') === 'true' || Boolean(paymentSessionId);
+const paymentEmailFromUrl = urlParams.get('email');
+const storedPaymentEmail = localStorage.getItem(PAYMENT_EMAIL_STORAGE_KEY);
+const strictPaymentFlow = fromPaymentFlow && Boolean(paymentSessionId || paymentEmailFromUrl || storedPaymentEmail);
 
 let paymentEmailVerified = false;
 let emailHydrationDone = false;
@@ -35,7 +38,7 @@ function setEmailLockNotice(message, tone = 'info') {
 }
 
 async function initPaymentEmailFlow() {
-    if (fromPaymentFlow) {
+    if (strictPaymentFlow) {
         submitBtn.disabled = true;
         emailInput.readOnly = true;
         setEmailLockNotice('Validando el email del pago...', 'info');
@@ -44,7 +47,7 @@ async function initPaymentEmailFlow() {
     await hydrateEmailFromPayment();
     emailHydrationDone = true;
 
-    if (fromPaymentFlow && !paymentEmailVerified) {
+    if (strictPaymentFlow && !paymentEmailVerified) {
         submitBtn.disabled = true;
         setEmailLockNotice(
             'No pudimos validar el email del pago. Reintenta desde el enlace de confirmacion de Stripe.',
@@ -53,9 +56,12 @@ async function initPaymentEmailFlow() {
         return;
     }
 
-    if (fromPaymentFlow && paymentEmailVerified) {
+    if (strictPaymentFlow && paymentEmailVerified) {
         setEmailLockNotice('Email validado desde Stripe y bloqueado para seguridad.', 'success');
     } else {
+        // Si solo viene fromPayment=true sin datos de Stripe, permitimos registro normal.
+        emailInput.readOnly = false;
+        emailInput.classList.remove('locked-email');
         setEmailLockNotice('');
     }
 
@@ -82,10 +88,10 @@ function setEmailValue(email, options = {}) {
 }
 
 async function hydrateEmailFromPayment() {
-    const emailFromUrl = urlParams.get('email');
-    const storedEmail = localStorage.getItem(PAYMENT_EMAIL_STORAGE_KEY);
+    const emailFromUrl = paymentEmailFromUrl;
+    const storedEmail = storedPaymentEmail;
 
-    if (fromPaymentFlow && setEmailValue(emailFromUrl, { lock: true })) {
+    if (strictPaymentFlow && setEmailValue(emailFromUrl, { lock: true })) {
         return;
     }
 
@@ -129,7 +135,7 @@ async function hydrateEmailFromPayment() {
     }
 
     // Flujo pago sin validacion: no marcar como verificado
-    if (fromPaymentFlow && storedEmail) {
+    if (strictPaymentFlow && storedEmail) {
         emailInput.value = storedEmail;
     }
 }
@@ -179,12 +185,12 @@ confirmPasswordInput.addEventListener('blur', () => {
 registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    if (fromPaymentFlow && !emailHydrationDone) {
+    if (strictPaymentFlow && !emailHydrationDone) {
         setEmailLockNotice('Aun estamos validando el email del pago. Espera un segundo.', 'info');
         return;
     }
 
-    if (fromPaymentFlow && !paymentEmailVerified) {
+    if (strictPaymentFlow && !paymentEmailVerified) {
         setEmailLockNotice(
             'Debes completar el registro con el mismo email validado en Stripe.',
             'error'

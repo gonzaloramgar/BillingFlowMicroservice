@@ -1,5 +1,6 @@
 package com.example.Customer_Service.dto;
 
+// Nota: DTO para intercambio de datos entre capas/servicios.
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -8,3 +9,5 @@ import lombok.Data;
 public class MessageResponse {
     private String message;
 }
+
+

@@ -1,5 +1,6 @@
 package com.example.Customer_Service.dto;
 
+// Nota: DTO para intercambio de datos entre capas/servicios.
 import lombok.Builder;
 import lombok.Data;
 
@@ -13,3 +14,5 @@ public class CustomerResponse {
     private Boolean enabled;
     private String role;
 }
+
+

@@ -1,5 +1,6 @@
 package com.example.payment_service.dto;
 
+// Nota: DTO para intercambio de datos entre capas/servicios.
 public class CreateSessionResponse {
     private String url;
 
@@ -18,3 +19,5 @@ public class CreateSessionResponse {
         this.url = url;
     }
 }
+
+

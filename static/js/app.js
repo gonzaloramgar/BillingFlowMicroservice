@@ -11,12 +11,34 @@ if (!raw) {
     window.location.href = 'login.html';
 }
 const currentUser = raw ? JSON.parse(raw) : null;
+if (!currentUser?.token && !localStorage.getItem('currentCustomerToken')) {
+    localStorage.removeItem('currentCustomer');
+    localStorage.removeItem('currentCustomerEmail');
+    localStorage.removeItem('currentCustomerRole');
+    window.location.href = 'login.html';
+}
 
 // ---- STATE ----
 // Borradores locales + facturas persistidas en invoice-service
 const DRAFTS_KEY = 'billingflow_drafts';
 let drafts = JSON.parse(localStorage.getItem(DRAFTS_KEY) || '[]');
 let serverInvoices = [];
+// Si no es null, el formulario está editando un borrador existente.
+let editingDraftId = null;
+
+function getAuthToken() {
+    return currentUser?.token || localStorage.getItem('currentCustomerToken') || '';
+}
+
+function getAuthHeaders(extra = {}) {
+    const token = getAuthToken();
+    const headers = { ...extra };
+    if (token) {
+        // Todas las llamadas protegidas al backend viajan con JWT Bearer.
+        headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
+}
 
 function saveDrafts() {
     localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
@@ -24,7 +46,7 @@ function saveDrafts() {
 
 async function fetchInvoicesFromServer() {
     try {
-        const res = await fetch(INVOICE_API, { headers: { 'Content-Type': 'application/json' } });
+        const res = await fetch(INVOICE_API, { headers: getAuthHeaders({ 'Content-Type': 'application/json' }) });
         if (!res.ok) throw new Error(`Error ${res.status}`);
         const data = await res.json();
         serverInvoices = Array.isArray(data) ? data : [];
@@ -131,6 +153,7 @@ function logout() {
     localStorage.removeItem('currentCustomer');
     localStorage.removeItem('currentCustomerEmail');
     localStorage.removeItem('currentCustomerRole');
+    localStorage.removeItem('currentCustomerToken');
     window.location.href = 'login.html';
 }
 
@@ -201,6 +224,12 @@ function renderInvoiceList(filter = 'all', search = '') {
     }
 
     wrapper.innerHTML = buildInvoiceTable(list, true);
+    wrapper.querySelectorAll('.app-edit-draft-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            editDraftById(btn.dataset.id);
+        });
+    });
+
     wrapper.querySelectorAll('.app-delete-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             const id = btn.dataset.id;
@@ -221,7 +250,7 @@ async function deleteInvoiceById(id) {
     if (id.startsWith('srv-')) {
         const serverId = id.replace('srv-', '');
         try {
-            const res = await fetch(`${INVOICE_API}/${serverId}`, { method: 'DELETE' });
+            const res = await fetch(`${INVOICE_API}/${serverId}`, { method: 'DELETE', headers: getAuthHeaders() });
             if (!res.ok) throw new Error(`Error ${res.status}`);
             await fetchInvoicesFromServer();
             return true;
@@ -236,6 +265,35 @@ async function deleteInvoiceById(id) {
     return true;
 }
 
+function editDraftById(id) {
+    const draft = drafts.find(f => f.id === id);
+    if (!draft) {
+        showToast('No se encontró el borrador', 'error');
+        return;
+    }
+
+    // Entramos en modo "edición" para que guardar actualice y no cree otro borrador.
+    editingDraftId = id;
+    navigate('nueva-factura');
+
+    document.getElementById('facturaNumero').value = draft.numero || '';
+    document.getElementById('invoiceCliente').value = draft.clienteNombre || '';
+    document.getElementById('invoiceFechaEmision').value = draft.fecha || '';
+    document.getElementById('invoiceMontoBase').value = Number(draft.base || 0).toFixed(2);
+
+    // Reconstruye IVA% si el borrador no lo tenía explícito guardado.
+    const draftPct = Number(draft.ivaPct);
+    const computedPct = Number(draft.base) > 0 ? ((Number(draft.iva || 0) / Number(draft.base)) * 100) : 21;
+    const ivaPercent = Number.isFinite(draftPct) ? draftPct : computedPct;
+    const allowedPct = [0, 4, 10, 21].includes(Math.round(ivaPercent)) ? Math.round(ivaPercent) : 21;
+
+    document.getElementById('invoiceIvaPercent').value = String(allowedPct);
+    recalcInvoiceTotals();
+    document.getElementById('invoiceIva').value = Number(draft.iva || 0).toFixed(2);
+    document.getElementById('invoiceTotal').value = Number(draft.total || 0).toFixed(2);
+    document.getElementById('saveBtn').textContent = 'Actualizar borrador';
+}
+
 function buildInvoiceTable(list, withActions = false) {
     const statusLabel = { paid: 'Pagada', pending: 'Pendiente', draft: 'Borrador' };
     const statusClass = { paid: 'status-paid', pending: 'status-pending', draft: 'status-draft' };
@@ -247,7 +305,7 @@ function buildInvoiceTable(list, withActions = false) {
             <td>${formatDate(f.fecha)}</td>
             <td>€${(f.total || 0).toFixed(2).replace('.', ',')}</td>
             <td><span class="app-status-tag ${statusClass[f.status] || ''}">${statusLabel[f.status] || f.status}</span></td>
-            ${withActions ? `<td><button class="app-action-btn app-action-btn--danger app-delete-btn" data-id="${f.id}" title="Eliminar factura">Eliminar</button></td>` : ''}
+            ${withActions ? `<td>${f.source === 'draft' ? `<button class="app-action-btn app-edit-draft-btn" data-id="${f.id}" title="Editar borrador">Editar</button>` : ''} <button class="app-action-btn app-action-btn--danger app-delete-btn" data-id="${f.id}" title="Eliminar factura">Eliminar</button></td>` : ''}
         </tr>`).join('');
 
     return `
@@ -290,6 +348,8 @@ document.getElementById('invoiceIvaPercent').addEventListener('change', recalcIn
 
 // Autocompletar número de factura con fecha de hoy
 function initInvoiceForm() {
+    // Al abrir "Nueva Factura" limpiamos el modo edición para empezar desde cero.
+    editingDraftId = null;
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
     document.getElementById('invoiceFechaEmision').value = dateStr;
@@ -301,6 +361,7 @@ function initInvoiceForm() {
     document.getElementById('invoiceCliente').value = '';
     document.getElementById('invoiceMontoBase').value = '';
     document.getElementById('invoiceIvaPercent').value = '21';
+    document.getElementById('saveBtn').textContent = 'Guardar borrador';
     recalcInvoiceTotals();
 }
 
@@ -312,11 +373,20 @@ document.getElementById('saveBtn').addEventListener('click', () => {
         return;
     }
     draft.status = 'draft';
-    draft.id = 'draft-' + Date.now();
     draft.source = 'draft';
-    drafts.push(draft);
+
+    if (editingDraftId) {
+        // Actualiza el mismo borrador editado (misma id).
+        draft.id = editingDraftId;
+        drafts = drafts.map(d => d.id === editingDraftId ? draft : d);
+        showToast('Borrador actualizado ✓');
+    } else {
+        draft.id = 'draft-' + Date.now();
+        drafts.push(draft);
+        showToast('Borrador guardado ✓');
+    }
+
     saveDrafts();
-    showToast('Borrador guardado ✓');
     navigate('mis-facturas');
 });
 
@@ -345,7 +415,7 @@ document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
 
         const response = await fetch(INVOICE_API, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify(payload)
         });
 
@@ -356,6 +426,14 @@ document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
         const blob = await response.blob();
         const fileName = getFileNameFromHeaders(response.headers) || `factura_${Date.now()}.pdf`;
         downloadBlob(blob, fileName);
+
+        if (editingDraftId) {
+            // Si venimos de un borrador y se generó factura real, eliminamos el borrador local.
+            drafts = drafts.filter(d => d.id !== editingDraftId);
+            editingDraftId = null;
+            saveDrafts();
+            document.getElementById('saveBtn').textContent = 'Guardar borrador';
+        }
 
         await fetchInvoicesFromServer();
         renderDashboard();

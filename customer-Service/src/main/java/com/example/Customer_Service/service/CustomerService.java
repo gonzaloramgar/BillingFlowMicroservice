@@ -1,5 +1,6 @@
 package com.example.Customer_Service.service;
 
+// Nota: contrato de operaciones de negocio para clientes.
 import java.util.List;
 
 import com.example.Customer_Service.model.Customer;
@@ -20,3 +21,5 @@ public interface CustomerService {
     // Aquí se añaden los métodos para buscar los perfiles
     Customer login(String email, String password);
 }
+
+

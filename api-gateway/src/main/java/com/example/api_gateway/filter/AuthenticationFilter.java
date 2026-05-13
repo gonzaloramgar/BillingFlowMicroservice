@@ -1,5 +1,6 @@
 package com.example.api_gateway.filter;
 
+// Nota: filtro del gateway que valida JWT antes de enrutar peticiones.
 import com.example.api_gateway.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -62,3 +63,4 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         // Clase de configuración vacía requerida por Spring Cloud Gateway
     }
 }
+
