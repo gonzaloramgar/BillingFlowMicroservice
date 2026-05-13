@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BillingFlow - Finalizar Compra</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="checkout-page">
+
+    <nav class="navbar">
+        <a href="index.html" class="logo-link">
+            <img src="img/logo.png" alt="BillingFlow Logo" class="logo-img">
+        </a>
+        <div class="nav-links">
+            <a href="index.html" class="back-link">← Volver al inicio</a>
+            <a href="login.html" class="btn-login-subtle">Iniciar sesión</a>
+        </div>
+    </nav>
+
+    <main class="container-checkout">
+        <div class="checkout-layout">
+            <div class="checkout-card">
+                <div class="checkout-header">
+                    <h2>Licencia para Autónomos</h2>
+                    <p>Crea facturas y visualízalas en PDF sin límites</p>
+                </div>
+
+                <div class="checkout-price">
+                    <span class="currency">€</span>
+                    <span class="amount">10</span>
+                    <span class="period">pago único</span>
+                </div>
+
+                <ul class="checkout-features">
+                    <li>
+                        <span class="icon-check">✅</span>
+                        <span class="feature-text">Generación de PDF ilimitada</span>
+                    </li>
+                    <li>
+                        <span class="icon-check">✅</span>
+                        <span class="feature-text">Visualización y descarga en PDF</span>
+                    </li>
+                    <li>
+                        <span class="icon-check">✅</span>
+                        <span class="feature-text">Gestión sencilla para autónomos</span>
+                    </li>
+                    <li>
+                        <span class="icon-check">✅</span>
+                        <span class="feature-text">Plantillas profesionales de factura</span>
+                    </li>
+                </ul>
+
+                <button id="btn-comprar" class="btn-large">
+                    Confirmar y Pagar <span class="highlight-text">DE POR VIDA</span>
+                </button>
+
+                <p id="mensaje-status" class="status-msg" style="display: none;"></p>
+            </div>
+
+            <aside class="order-summary" aria-label="Resumen de compra">
+                <h3>Resumen del pedido</h3>
+                <ul>
+                    <li><span>Producto</span><strong>BillingFlow Autónomos</strong></li>
+                    <li><span>Uso</span><strong>Facturación diaria</strong></li>
+                    <li><span>Formato</span><strong>PDF profesional</strong></li>
+                    <li><span>Soporte</span><strong>Email 24h</strong></li>
+                </ul>
+                <div class="summary-total">
+                    <span>Total</span>
+                    <strong>€10</strong>
+                </div>
+                <p class="summary-note">Activa tu herramienta de facturación para autónomos y empieza a emitir facturas PDF desde hoy.</p>
+            </aside>
+        </div>
+    </main>
+
+    <script src="js/payments.js"></script>
+</body>
+</html>

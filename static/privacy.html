@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BillingFlow - Política de Privacidad</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="legal-page">
+
+    <nav class="navbar">
+        <a href="index.html" class="logo-link">
+            <img src="img/logo.png" alt="BillingFlow Logo" class="logo-img">
+        </a>
+        <div class="nav-links">
+            <a href="index.html" class="back-link">← Volver al inicio</a>
+            <a href="login.html" class="btn-login-subtle">Iniciar sesión</a>
+        </div>
+    </nav>
+
+    <main class="legal-main">
+        <section class="legal-hero">
+            <div class="container">
+                <h1>Política de Privacidad</h1>
+                <p>Última actualización: 13 de mayo de 2026</p>
+            </div>
+        </section>
+
+        <section class="legal-content">
+            <div class="container legal-container">
+                <article class="legal-block">
+                    <h2>1. Responsable del tratamiento</h2>
+                    <p>BillingFlow es responsable del tratamiento de los datos personales recogidos a través de esta plataforma para la prestación del servicio de facturación.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>2. Datos que recopilamos</h2>
+                    <p>Podemos recopilar datos de identificación y contacto (como nombre y correo electrónico), así como datos necesarios para la creación de cuenta y gestión de facturas.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>3. Finalidad del tratamiento</h2>
+                    <p>Utilizamos tus datos para crear y gestionar tu cuenta, prestar soporte, mejorar el servicio y cumplir obligaciones legales. También podemos verificar el correo del pago para proteger la integridad del registro.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>4. Base jurídica</h2>
+                    <p>El tratamiento se basa en la ejecución del contrato de servicio, el cumplimiento de obligaciones legales y, cuando corresponda, en el consentimiento del usuario.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>5. Pasarela de pago</h2>
+                    <p>Los pagos se procesan mediante Stripe. BillingFlow no almacena datos completos de tarjetas. Stripe actúa como proveedor de servicios de pago y trata la información conforme a sus propias políticas.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>6. Conservación de los datos</h2>
+                    <p>Conservamos los datos mientras exista relación de servicio y durante los plazos necesarios para cumplir obligaciones legales o atender posibles reclamaciones.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>7. Compartición de datos</h2>
+                    <p>No vendemos tus datos personales. Solo se comparten con proveedores necesarios para operar el servicio (por ejemplo, pago y alojamiento), bajo medidas de seguridad y acuerdos adecuados.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>8. Derechos del usuario</h2>
+                    <p>Puedes solicitar acceso, rectificación, supresión, oposición o limitación del tratamiento de tus datos, así como retirar tu consentimiento cuando aplique.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>9. Seguridad</h2>
+                    <p>Aplicamos medidas técnicas y organizativas razonables para proteger la información personal frente a accesos no autorizados, pérdida o alteración.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>10. Contacto</h2>
+                    <p>Para ejercer tus derechos o resolver dudas sobre privacidad, escribe a <a href="mailto:hola@billingflow.com">hola@billingflow.com</a>.</p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container footer-layout">
+            <p>&copy; 2026 BillingFlow System - Eficiencia Profesional</p>
+            <div class="footer-links">
+                <a href="index.html">Inicio</a>
+                <a href="terms.html" data-keep-payment-context="true">Términos</a>
+                <a href="checkout.html" class="buy-link">Comprar</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const fromPayment = params.get('fromPayment') === 'true';
+
+            if (!fromPayment) {
+                return;
+            }
+
+            document.querySelectorAll('.buy-link').forEach((link) => link.remove());
+
+            document.querySelectorAll('a[data-keep-payment-context="true"]').forEach((link) => {
+                const rawHref = link.getAttribute('href');
+                if (!rawHref) {
+                    return;
+                }
+
+                const url = new URL(rawHref, window.location.href);
+                url.searchParams.set('fromPayment', 'true');
+                link.setAttribute('href', `${url.pathname}${url.search}`);
+            });
+        })();
+    </script>
+
+</body>
+</html>

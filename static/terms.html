@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BillingFlow - Términos de Servicio</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="legal-page">
+
+    <nav class="navbar">
+        <a href="index.html" class="logo-link">
+            <img src="img/logo.png" alt="BillingFlow Logo" class="logo-img">
+        </a>
+        <div class="nav-links">
+            <a href="index.html" class="back-link">← Volver al inicio</a>
+            <a href="login.html" class="btn-login-subtle">Iniciar sesión</a>
+        </div>
+    </nav>
+
+    <main class="legal-main">
+        <section class="legal-hero">
+            <div class="container">
+                <h1>Términos de Servicio</h1>
+                <p>Última actualización: 13 de mayo de 2026</p>
+            </div>
+        </section>
+
+        <section class="legal-content">
+            <div class="container legal-container">
+                <article class="legal-block">
+                    <h2>1. Aceptación de los términos</h2>
+                    <p>Al acceder y utilizar BillingFlow, aceptas estos términos de servicio. Si no estás de acuerdo con alguno de los puntos, no debes utilizar la plataforma.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>2. Descripción del servicio</h2>
+                    <p>BillingFlow es una herramienta orientada a autónomos para crear facturas, visualizarlas y descargarlas en formato PDF. El servicio se ofrece bajo modalidad de pago único para la versión actual.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>3. Registro y acceso</h2>
+                    <p>Para activar la cuenta, el usuario debe completar el proceso de pago y registro. El correo utilizado en el pago puede ser verificado para evitar inconsistencias en la identidad de la cuenta.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>4. Uso permitido</h2>
+                    <p>Te comprometes a usar BillingFlow de forma lícita y responsable. No está permitido utilizar la plataforma para emitir documentación falsa o para actividades contrarias a la legislación vigente.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>5. Responsabilidad del contenido</h2>
+                    <p>El usuario es responsable de los datos introducidos en las facturas (importes, impuestos, identificaciones y destinatarios). BillingFlow no sustituye asesoría legal, fiscal o contable.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>6. Pagos y reembolsos</h2>
+                    <p>El pago se procesa mediante Stripe. El acceso se habilita tras confirmación de pago. La política de reembolso puede aplicarse conforme a lo indicado en la página de compra y la normativa de consumo aplicable.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>7. Disponibilidad del servicio</h2>
+                    <p>Se busca mantener la disponibilidad continua, pero pueden existir interrupciones temporales por mantenimiento, mejoras o incidencias técnicas.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>8. Limitación de responsabilidad</h2>
+                    <p>En la medida permitida por ley, BillingFlow no será responsable por daños indirectos derivados del uso o imposibilidad de uso del servicio.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>9. Modificaciones</h2>
+                    <p>Estos términos pueden actualizarse para reflejar cambios funcionales o legales. Se publicará la fecha de última actualización en esta misma página.</p>
+                </article>
+
+                <article class="legal-block">
+                    <h2>10. Contacto</h2>
+                    <p>Para dudas legales o contractuales puedes contactar en <a href="mailto:billingflowsupport@gmail.com">billingflowsupport@gmail.com</a>.</p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container footer-layout">
+            <p>&copy; 2026 BillingFlow System - Eficiencia Profesional</p>
+            <div class="footer-links">
+                <a href="index.html">Inicio</a>
+                <a href="privacy.html" data-keep-payment-context="true">Privacidad</a>
+                <a href="checkout.html" class="buy-link">Comprar</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const fromPayment = params.get('fromPayment') === 'true';
+
+            if (!fromPayment) {
+                return;
+            }
+
+            document.querySelectorAll('.buy-link').forEach((link) => link.remove());
+
+            document.querySelectorAll('a[data-keep-payment-context="true"]').forEach((link) => {
+                const rawHref = link.getAttribute('href');
+                if (!rawHref) {
+                    return;
+                }
+
+                const url = new URL(rawHref, window.location.href);
+                url.searchParams.set('fromPayment', 'true');
+                link.setAttribute('href', `${url.pathname}${url.search}`);
+            });
+        })();
+    </script>
+
+</body>
+</html>
