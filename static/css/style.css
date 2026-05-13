@@ -882,7 +882,8 @@ body.faq-page .back-link:hover {
     to { opacity: 0; transform: translateX(-50%) translateY(-18px); }
 }
 
-
+@media (max-width: 768px) {
+    .container-checkout {
         min-height: auto;
         padding: 28px 16px 48px;
         align-items: stretch;
@@ -1536,7 +1537,6 @@ body.legal-page {
         font-size: 0.9rem;
         margin-top: 8px;
     }
-}
 
 /* =====================================================
    APP — Layout principal (app.html)
