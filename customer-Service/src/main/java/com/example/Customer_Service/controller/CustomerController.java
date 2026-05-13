@@ -45,6 +45,18 @@ public class CustomerController {
         }
     }
 
+    @PostMapping("/resend-code")
+    public ResponseEntity<String> resendCode(@RequestBody java.util.Map<String, String> request) {
+        String email = request.get("email");
+        boolean sent = customerService.resendVerificationCode(email);
+
+        if (sent) {
+            return ResponseEntity.ok("Hemos reenviado tu código de verificación al email indicado.");
+        }
+
+        return ResponseEntity.status(400).body("No existe un registro pendiente para ese email.");
+    }
+
     // Endopint para obtener todos los cliente 
     @GetMapping
     public ResponseEntity<List<Customer>> getAll() {

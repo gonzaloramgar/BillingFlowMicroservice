@@ -25,7 +25,7 @@
                 <p>Accede con el correo que utilizaste durante el registro tras el pago.</p>
             </div>
 
-            <form class="register-form">
+            <form class="register-form" id="loginForm">
                 <div class="form-group">
                     <label for="loginEmail">Email</label>
                     <input type="email" id="loginEmail" placeholder="tu@email.com" required>
@@ -36,9 +36,23 @@
                     <input type="password" id="loginPassword" placeholder="Tu contraseña" required>
                 </div>
 
-                <button type="submit" class="btn-large">Entrar</button>
-                <p class="form-footer">Esta pantalla está lista para conectar con tu API de login cuando la tengas disponible.</p>
+                <button type="submit" class="btn-large" id="loginBtn">Entrar</button>
+                <p class="form-footer">Si no has verificado tu cuenta, completa el proceso desde el correo de verificación.</p>
             </form>
+
+            <div id="loginSuccessMessage" class="success-message" style="display: none;">
+                <div class="success-content">
+                    <h2>¡Login correcto!</h2>
+                    <p>Acceso concedido. Redirigiendo al inicio...</p>
+                    <div class="loader"></div>
+                </div>
+            </div>
+
+            <div id="loginErrorMessage" class="error-message" style="display: none;">
+                <h3>No se pudo iniciar sesión</h3>
+                <p id="loginErrorText"></p>
+                <button type="button" class="btn-secondary" id="loginRetryBtn">Reintentar</button>
+            </div>
         </div>
     </main>
 
@@ -53,5 +67,6 @@
         </div>
     </footer>
 
+    <script src="js/login.js"></script>
 </body>
 </html>

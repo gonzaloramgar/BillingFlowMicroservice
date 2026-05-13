@@ -38,7 +38,6 @@ public class PaymentController {
         com.stripe.Stripe.apiKey = stripeApiKey;
 
     try {
-        String userEmail = data.get("email") != null ? data.get("email").toString() : null;
         Long amount = Long.parseLong(data.get("amount").toString());
         String successUrl = data.get("successUrl") != null ? data.get("successUrl").toString() : null;
         String cancelUrl = data.get("cancelUrl") != null ? data.get("cancelUrl").toString() : null;
@@ -61,10 +60,6 @@ public class PaymentController {
                                         // -----------------------------------------
                                 .build())
                         .build());
-
-                        if (userEmail != null && !userEmail.isBlank()) {
-                            builder.setCustomerEmail(userEmail);
-                        }
                         
         Session session = Session.create(builder.build());
         

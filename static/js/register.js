@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8082/api/auth';
+const API_BASE = 'http://localhost:8082/api/customers';
 const PAYMENTS_API_BASE = 'http://localhost:8081/api/payments';
 const PAYMENT_EMAIL_STORAGE_KEY = 'billingflowCheckoutEmail';
 
@@ -208,13 +208,17 @@ registerForm.addEventListener('submit', async (e) => {
     submitBtn.innerHTML = '<span class="btn-loader"></span> Creando cuenta...';
 
     try {
+        const fullName = document.getElementById('fullName').value.trim();
+        const nameParts = fullName.split(/\s+/);
+        const firstName = nameParts.shift() || fullName;
+        const lastName = nameParts.join(' ') || 'Cliente';
+
         const formData = {
-            fullName: document.getElementById('fullName').value,
-            businessName: document.getElementById('businessName').value,
+            firstName,
+            lastName,
             email: emailInput.value,
-            phone: document.getElementById('phone').value || null,
             password: passwordInput.value,
-            paymentSessionId: paymentSessionId || null
+            role: 'USER'
         };
 
         const response = await fetch(`${API_BASE}/register`, {
@@ -225,29 +229,28 @@ registerForm.addEventListener('submit', async (e) => {
             body: JSON.stringify(formData)
         });
 
-        const data = await response.json();
+        const responseText = await response.text();
+        let data = null;
+        try {
+            data = responseText ? JSON.parse(responseText) : null;
+        } catch (jsonError) {
+            data = null;
+        }
 
         if (response.ok) {
             // Éxito
             registerForm.style.display = 'none';
             successMessage.style.display = 'block';
-            
-            // Guardar token si viene en la respuesta
-            if (data.token) {
-                localStorage.setItem('authToken', data.token);
-            }
-            if (data.userId) {
-                localStorage.setItem('userId', data.userId);
-            }
+            localStorage.setItem('pendingVerificationEmail', emailInput.value);
             localStorage.removeItem(PAYMENT_EMAIL_STORAGE_KEY);
 
-            // Redirigir al dashboard después de 2.5 segundos
+            // Redirigir a verificación de código
             setTimeout(() => {
-                window.location.href = 'dashboard.html';
+                window.location.href = `verify-code.html?email=${encodeURIComponent(emailInput.value)}`;
             }, 2500);
         } else {
             // Error de respuesta del servidor
-            showError(data.message || 'No se pudo crear la cuenta. Por favor, intenta de nuevo.');
+            showError((data && (data.message || data.error)) || responseText || 'No se pudo crear la cuenta. Por favor, intenta de nuevo.');
         }
     } catch (error) {
         console.error('Error:', error);

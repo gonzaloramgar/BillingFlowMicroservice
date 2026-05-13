@@ -98,6 +98,30 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public boolean resendVerificationCode(String email) {
+        Customer customer = pendingCustomers.get(email);
+
+        if (customer == null) {
+            System.out.println("No existe registro pendiente para reenviar código.");
+            return false;
+        }
+
+        String code = String.format("%06d", new Random().nextInt(999999));
+        customer.setVerificationCode(code);
+        customer.setCodeExpiration(LocalDateTime.now().plusMinutes(20));
+        customer.setFailedAttemps(0);
+
+        try {
+            emailService.sendVerificationEmail(customer.getEmail(), code);
+            System.out.println("Código reenviado a: " + customer.getEmail());
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error al reenviar código: " + e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
     public List<Customer> getAllCustomers() {
         return customerRepository.findAll();
     }

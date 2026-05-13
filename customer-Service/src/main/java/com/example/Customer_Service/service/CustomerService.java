@@ -8,6 +8,7 @@ public interface CustomerService {
     Customer registerCustomer(Customer customer);
 
     boolean verifyCode(String email, String code);
+    boolean resendVerificationCode(String email);
 
     List<Customer> getAllCustomers();
 

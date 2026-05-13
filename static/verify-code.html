@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BillingFlow - Verificar Cuenta</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="register-page">
+
+    <nav class="navbar">
+        <a href="index.html" class="logo-link">
+            <img src="img/logo.png" alt="BillingFlow Logo" class="logo-img">
+        </a>
+        <div class="nav-links">
+            <a href="login.html" class="btn-login-subtle">Iniciar sesión</a>
+        </div>
+    </nav>
+
+    <main class="container-register">
+        <div class="register-card">
+            <div class="register-header">
+                <h1>Verifica tu cuenta</h1>
+                <p>Introduce el código de 6 dígitos que acabamos de enviarte por email para activar tu acceso.</p>
+            </div>
+
+            <form id="verifyForm" class="register-form">
+                <div class="form-group">
+                    <label for="verifyEmail">Email</label>
+                    <input type="email" id="verifyEmail" name="verifyEmail" required placeholder="tu@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="verifyCode">Código de verificación</label>
+                    <input type="text" id="verifyCode" name="verifyCode" required maxlength="6" placeholder="123456">
+                </div>
+
+                <button type="submit" class="btn-large" id="verifyBtn">Verificar cuenta</button>
+
+                <div class="form-group" style="margin-top: 14px;">
+                    <button type="button" class="btn-secondary" id="resendBtn">Reenviar código</button>
+                </div>
+
+                <p class="form-footer">¿Ya validaste tu cuenta? <a href="login.html">Inicia sesión aquí</a></p>
+            </form>
+
+            <div id="verifySuccessMessage" class="success-message" style="display: none;">
+                <div class="success-content">
+                    <h2>¡Cuenta verificada!</h2>
+                    <p>Tu cuenta ya está activa. Te llevamos al login para que entres con tus credenciales.</p>
+                    <div class="loader"></div>
+                </div>
+            </div>
+
+            <div id="verifyErrorMessage" class="error-message" style="display: none;">
+                <h3>Verificación no completada</h3>
+                <p id="verifyErrorText"></p>
+                <button type="button" class="btn-secondary" id="verifyRetryBtn">Intentar de nuevo</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container footer-layout">
+            <p>&copy; 2026 BillingFlow System - Eficiencia Profesional</p>
+            <div class="footer-links">
+                <a href="index.html">Inicio</a>
+                <a href="faq.html">FAQ</a>
+                <a href="terms.html">Términos</a>
+                <a href="privacy.html">Privacidad</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/verify-code.js"></script>
+</body>
+</html>
