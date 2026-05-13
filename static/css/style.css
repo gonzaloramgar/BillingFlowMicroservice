@@ -1,8 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
-/* =========================================
-   1. VARIABLES Y BASE
-   ========================================= */
 :root {
     --bg-dark: #0f172a;
     --card-bg: #1e293b;
@@ -35,10 +32,6 @@ h1, h2, h3, h4 {
     padding: 0 20px;
 }
 
-/* =========================================
-
-   2. NAVBAR
-   ========================================= */
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -188,7 +181,6 @@ body.home-page.splash-active {
     transform: translateY(-1px);
 }
 
-
 body.home-page.page-ready .logo-link {
     animation: fadeUpSoft 0.65s ease both;
     animation-delay: 80ms;
@@ -199,9 +191,6 @@ body.home-page.page-ready .nav-links {
     animation-delay: 180ms;
 }
 
-/* =========================================
-   3. HERO SECTION
-   ========================================= */
 .hero {
     padding: 100px 0 80px;
     background:
@@ -330,7 +319,6 @@ body.home-page.page-ready .hero-stats div:nth-child(3) { animation-delay: 980ms;
 .btn-secondary:active {
     transform: translateY(-1px);
 }
-
 
 .hero-badges {
     display: flex;
@@ -490,9 +478,6 @@ body.home-page .hero {
     padding-top: 82px;
 }
 
-/* =========================================
-   4. BOTÓN PRINCIPAL (CORREGIDO)
-   ========================================= */
 .btn-large {
     background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%) !important;
     color: white !important;
@@ -537,7 +522,6 @@ body.home-page .hero {
 .btn-large:active {
     transform: translateY(-2px) !important;
 }
-
 
 @keyframes revealUp {
     from {
@@ -614,9 +598,6 @@ body.home-page .hero {
     }
 }
 
-/* =========================================
-   4.1 CHECKOUT PAGE
-   ========================================= */
 body.checkout-page {
     min-height: 100vh;
     background:
@@ -649,20 +630,12 @@ body.checkout-page .navbar {
     background: rgba(59, 130, 246, 0.06);
 }
 
-body.checkout-page .back-link {
-    color: var(--text-muted);
-}
-
-body.checkout-page .back-link:hover {
-    color: var(--accent);
-    background: rgba(37, 99, 235, 0.1);
-    border-color: rgba(37, 99, 235, 0.5);
-}
-
+body.checkout-page .back-link,
 body.faq-page .back-link {
     color: var(--text-muted);
 }
 
+body.checkout-page .back-link:hover,
 body.faq-page .back-link:hover {
     color: var(--accent);
     background: rgba(37, 99, 235, 0.1);
@@ -841,7 +814,6 @@ body.faq-page .back-link:hover {
     border-color: rgba(239, 68, 68, 0.2);
 }
 
-/* ---- Banner de cuenta verificada (login.html) ---- */
 .verified-banner {
     position: fixed;
     top: 24px;
@@ -911,9 +883,6 @@ body.faq-page .back-link:hover {
     text-transform: uppercase;
 }
 
-/* =========================================
-   5. FEATURES GRID
-   ========================================= */
 .features-section { padding: 80px 0; }
 
 .cta-section {
@@ -964,9 +933,6 @@ body.faq-page .back-link:hover {
 .feature-icon { font-size: 2.5rem; margin-bottom: 15px; display: block; }
 .feature-card h3 { margin-bottom: 10px; }
 
-/* =========================================
-   6. TABLA COMPARATIVA (RECONSTRUIDA)
-   ========================================= */
 .comparison-section { padding: 80px 0; background: rgba(30, 41, 59, 0.4); }
 
 .comparison-table {
@@ -1151,9 +1117,6 @@ body.faq-page .back-link:hover {
     margin-top: 8px;
 }
 
-/* =========================================
-   7. FAQ PAGE
-   ========================================= */
 .faq-page {
     background: linear-gradient(180deg, #0b1020 0%, #0f172a 100%);
 }
@@ -1285,9 +1248,6 @@ body.faq-page .back-link:hover {
     color: var(--text-muted);
 }
 
-/* =========================================
-   PÁGINAS LEGALES
-   ========================================= */
 body.legal-page {
     background:
         radial-gradient(circle at top, rgba(37, 99, 235, 0.14), transparent 36%),
@@ -1346,9 +1306,7 @@ body.legal-page {
     text-decoration: underline;
 }
 
-    /* =========================================
-       PÁGINA DE REGISTRO
-       ========================================= */
+    
     body.register-page {
         background:
             radial-gradient(circle at top, rgba(37, 99, 235, 0.16), transparent 38%),
@@ -1538,10 +1496,6 @@ body.legal-page {
         margin-top: 8px;
     }
 
-/* =====================================================
-   APP — Layout principal (app.html)
-   ===================================================== */
-
 .app-page {
     display: flex;
     flex-direction: column;
@@ -1549,7 +1503,6 @@ body.legal-page {
     background: var(--bg-dark);
 }
 
-/* ---- Topbar ---- */
 .app-topbar {
     display: flex;
     align-items: center;
@@ -1597,14 +1550,12 @@ body.legal-page {
     color: #fca5a5;
 }
 
-/* ---- Shell (sidebar + main) ---- */
 .app-shell {
     display: flex;
     flex: 1;
     min-height: 0;
 }
 
-/* ---- Sidebar ---- */
 .app-sidebar {
     width: 220px;
     flex-shrink: 0;
@@ -1658,7 +1609,6 @@ body.legal-page {
     text-align: center;
 }
 
-/* ---- Main content ---- */
 .app-main {
     flex: 1;
     padding: 32px 28px;
@@ -1666,7 +1616,6 @@ body.legal-page {
     max-width: 1100px;
 }
 
-/* ---- View header ---- */
 .app-view-header {
     display: flex;
     align-items: flex-start;
@@ -1685,7 +1634,6 @@ body.legal-page {
     font-size: 0.93rem;
 }
 
-/* ---- Stats grid ---- */
 .app-stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1720,7 +1668,6 @@ body.legal-page {
     line-height: 1;
 }
 
-/* ---- Generic card ---- */
 .app-card {
     background: var(--card-bg);
     border: 1px solid rgba(255,255,255,0.07);
@@ -1754,7 +1701,6 @@ body.legal-page {
 }
 .app-link:hover { color: #93c5fd; }
 
-/* ---- Empty state ---- */
 .app-empty-state {
     display: flex;
     flex-direction: column;
@@ -1777,7 +1723,6 @@ body.legal-page {
     font-size: 0.95rem;
 }
 
-/* ---- Table ---- */
 .app-table {
     width: 100%;
     border-collapse: collapse;
@@ -1818,7 +1763,6 @@ body.legal-page {
 .status-pending { background: rgba(245,158,11,0.15); color: #fcd34d; }
 .status-draft { background: rgba(148,163,184,0.12); color: #94a3b8; }
 
-/* ---- Toolbar ---- */
 .app-toolbar {
     display: flex;
     gap: 12px;
@@ -1860,18 +1804,6 @@ body.legal-page {
     color: #e2e8f0;
 }
 
-/* ---- Invoice form ---- */
-.app-form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    align-items: start;
-}
-.app-form-col {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
 .app-form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1892,7 +1824,7 @@ body.legal-page {
 }
 .app-field input,
 .app-field select,
-.app-textarea {
+.app-field textarea {
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 10px;
@@ -1906,59 +1838,12 @@ body.legal-page {
 }
 .app-field input:focus,
 .app-field select:focus,
-.app-textarea:focus {
+.app-field textarea:focus {
     border-color: rgba(37,99,235,0.6);
 }
 .app-field input::placeholder,
-.app-textarea::placeholder {
+.app-field textarea::placeholder {
     color: rgba(148,163,184,0.5);
-}
-.app-textarea {
-    resize: vertical;
-    min-height: 80px;
-    width: 100%;
-}
-
-/* ---- Invoice lines ---- */
-.app-invoice-lines-header {
-    display: grid;
-    grid-template-columns: 1fr 80px 110px 90px 32px;
-    gap: 8px;
-    padding: 0 4px 8px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-    margin-bottom: 10px;
-}
-.app-invoice-line {
-    display: grid;
-    grid-template-columns: 1fr 80px 110px 90px 32px;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 8px;
-}
-.app-invoice-line input {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.09);
-    border-radius: 8px;
-    padding: 8px 10px;
-    color: var(--text-main);
-    font-size: 0.88rem;
-    font-family: inherit;
-    outline: none;
-    width: 100%;
-    transition: border-color 0.2s;
-}
-.app-invoice-line input:focus { border-color: rgba(37,99,235,0.5); }
-.app-invoice-line input::placeholder { color: rgba(148,163,184,0.4); }
-.line-total {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #93c5fd;
-    text-align: right;
 }
 
 .app-icon-btn {
@@ -2011,34 +1896,6 @@ body.legal-page {
     cursor: not-allowed;
 }
 
-/* ---- Totals ---- */
-.app-invoice-totals {
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: flex-end;
-}
-.app-totals-row {
-    display: flex;
-    gap: 32px;
-    justify-content: flex-end;
-    font-size: 0.92rem;
-    color: var(--text-muted);
-}
-.app-totals-row strong { color: var(--text-main); min-width: 80px; text-align: right; }
-.app-totals-row.total-final {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: var(--text-main);
-    padding-top: 8px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-}
-.app-totals-row.total-final strong { color: #93c5fd; font-size: 1.15rem; }
-
-/* ---- Invoice actions ---- */
 .app-invoice-actions {
     display: flex;
     flex-direction: column;
@@ -2066,7 +1923,6 @@ body.legal-page {
     border: 1px solid rgba(37,99,235,0.3);
 }
 
-/* ---- Profile ---- */
 .app-profile-grid {
     display: grid;
     grid-template-columns: 280px 1fr;
@@ -2141,7 +1997,6 @@ body.legal-page {
     border-top: 1px solid rgba(255,255,255,0.06);
 }
 
-/* ---- Toast ---- */
 .app-toast {
     position: fixed;
     bottom: 28px;
@@ -2168,7 +2023,6 @@ body.legal-page {
 .app-toast--error { border-color: rgba(239,68,68,0.3); color: #fca5a5; }
 .app-toast--warning { border-color: rgba(245,158,11,0.3); color: #fcd34d; }
 
-/* ---- Responsive ---- */
 @media (max-width: 900px) {
     .app-sidebar {
         width: 60px;
@@ -2177,14 +2031,11 @@ body.legal-page {
     .app-nav-item span:last-child { display: none; }
     .app-main { padding: 20px 16px; }
     .app-stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .app-form-grid { grid-template-columns: 1fr; }
     .app-profile-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {
     .app-stats-grid { grid-template-columns: 1fr 1fr; }
     .app-form-row { grid-template-columns: 1fr; }
-    .app-invoice-lines-header,
-    .app-invoice-line { grid-template-columns: 1fr 60px 80px 70px 28px; }
 }
 
     .form-footer a {
@@ -2258,53 +2109,6 @@ body.legal-page {
         margin-bottom: 16px;
     }
 
-@media (max-width: 960px) {
-    .faq-hero {
-        padding: 60px 0 50px;
-    }
-
-    .faq-content {
-        padding: 60px 0;
-    }
-
-    .faq-cta-inner {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 20px;
-    }
-}
-
-@media (max-width: 640px) {
-    .faq-hero {
-        padding: 50px 0 40px;
-    }
-
-    .faq-hero h1 {
-        font-size: 2.2rem;
-    }
-
-    .faq-category h2 {
-        font-size: 1.4rem;
-        margin-bottom: 18px;
-    }
-
-    .faq-category details {
-        padding: 14px 16px;
-    }
-
-    .faq-category summary {
-        font-size: 0.95rem;
-    }
-
-    .faq-category p {
-        font-size: 0.95rem;
-    }
-
-    .faq-cta-inner {
-        padding: 28px;
-    }
-}
-
 body.home-page .js-reveal {
     opacity: 0;
     transform: translateY(24px) scale(0.985);
@@ -2341,6 +2145,20 @@ body.home-page .js-reveal.in-view {
 }
 
 @media (max-width: 960px) {
+    .faq-hero {
+        padding: 60px 0 50px;
+    }
+
+    .faq-content {
+        padding: 60px 0;
+    }
+
+    .faq-cta-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
     .hero {
         padding: 70px 0 60px;
     }
@@ -2377,6 +2195,35 @@ body.home-page .js-reveal.in-view {
 }
 
 @media (max-width: 640px) {
+    .faq-hero {
+        padding: 50px 0 40px;
+    }
+
+    .faq-hero h1 {
+        font-size: 2.2rem;
+    }
+
+    .faq-category h2 {
+        font-size: 1.4rem;
+        margin-bottom: 18px;
+    }
+
+    .faq-category details {
+        padding: 14px 16px;
+    }
+
+    .faq-category summary {
+        font-size: 0.95rem;
+    }
+
+    .faq-category p {
+        font-size: 0.95rem;
+    }
+
+    .faq-cta-inner {
+        padding: 28px;
+    }
+
     .navbar {
         padding: 10px 14px 10px 6px;
     }
@@ -2432,7 +2279,7 @@ body.home-page .js-reveal.in-view {
         font-size: 1rem;
     }
 
-        /* Registro - Mobile */
+        
         .register-card {
             padding: 32px 24px;
             border-radius: 12px;
@@ -2472,9 +2319,6 @@ body.home-page .js-reveal.in-view {
             font-size: 1.3rem;
         }
     }
-/* =====================================================
-   ADMIN PANEL
-   ===================================================== */
 
 .app-nav-admin {
     margin-top: 12px;
@@ -2536,7 +2380,6 @@ body.home-page .js-reveal.in-view {
     justify-content: flex-end;
 }
 
-/* ---- Admin Modal ---- */
 .admin-modal-overlay {
     position: fixed;
     inset: 0;
@@ -2591,3 +2434,4 @@ body.home-page .js-reveal.in-view {
     padding: 10px 22px;
     font-size: 0.95rem;
 }
+
