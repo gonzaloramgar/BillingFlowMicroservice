@@ -34,6 +34,7 @@ function navigate(viewName) {
 
     if (viewName === 'dashboard') renderDashboard();
     if (viewName === 'mis-facturas') renderInvoiceList();
+    if (viewName === 'admin') loadAdminView();
 }
 
 document.querySelectorAll('[data-view]').forEach(el => {
@@ -62,6 +63,12 @@ function initUser() {
     document.getElementById('profileRole2').textContent = role;
     document.getElementById('profileRole').className =
         'app-role-badge' + (role === 'ADMIN' ? ' app-role-badge--admin' : '');
+
+    // Mostrar botón Admin en sidebar solo si es ADMIN
+    if (role === 'ADMIN') {
+        const adminBtn = document.getElementById('adminNavBtn');
+        if (adminBtn) adminBtn.style.display = 'flex';
+    }
 }
 
 // ---- LOGOUT ----
@@ -350,4 +357,211 @@ function formatDate(iso) {
 // ---- INIT ----
 initUser();
 initInvoiceForm();
+initAdminPanel();
 navigate('dashboard');
+
+// ============================================================
+//  ADMIN PANEL
+// ============================================================
+let allUsers = [];
+
+function isAdmin() {
+    return currentUser?.role === 'ADMIN';
+}
+
+async function loadAdminView() {
+    if (!isAdmin()) {
+        navigate('dashboard');
+        showToast('Acceso restringido a administradores', 'error');
+        return;
+    }
+
+    const wrapper = document.getElementById('adminTableWrapper');
+    wrapper.innerHTML = `<div class="app-empty-state"><div class="app-empty-icon">⏳</div><p>Cargando usuarios…</p></div>`;
+
+    try {
+        const res = await fetch(`${CUSTOMER_API}`, {
+            headers: { 'Content-Type': 'application/json' }
+        });
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        allUsers = await res.json();
+        renderAdminStats(allUsers);
+        renderAdminTable(
+            document.getElementById('adminFilter').value,
+            document.getElementById('adminSearch').value
+        );
+    } catch (err) {
+        wrapper.innerHTML = `
+            <div class="app-empty-state">
+                <div class="app-empty-icon">❌</div>
+                <p>No se pudo conectar con el Customer Service</p>
+                <small style="color:var(--text-muted)">${err.message}</small>
+            </div>`;
+    }
+}
+
+function renderAdminStats(users) {
+    document.getElementById('adminStatTotal').textContent = users.length;
+    document.getElementById('adminStatEnabled').textContent = users.filter(u => u.enabled).length;
+    document.getElementById('adminStatDisabled').textContent = users.filter(u => !u.enabled).length;
+    document.getElementById('adminStatAdmins').textContent = users.filter(u => u.role === 'ADMIN').length;
+}
+
+function renderAdminTable(filter = 'all', search = '') {
+    const wrapper = document.getElementById('adminTableWrapper');
+    let list = [...allUsers];
+
+    if (filter === 'enabled')  list = list.filter(u => u.enabled);
+    if (filter === 'disabled') list = list.filter(u => !u.enabled);
+    if (filter === 'admin')    list = list.filter(u => u.role === 'ADMIN');
+
+    if (search) {
+        const q = search.toLowerCase();
+        list = list.filter(u =>
+            (u.firstName || '').toLowerCase().includes(q) ||
+            (u.lastName  || '').toLowerCase().includes(q) ||
+            (u.email     || '').toLowerCase().includes(q)
+        );
+    }
+
+    if (list.length === 0) {
+        wrapper.innerHTML = `<div class="app-empty-state"><div class="app-empty-icon">🔍</div><p>No hay resultados</p></div>`;
+        return;
+    }
+
+    const isSelf = id => String(id) === String(currentUser?.id);
+
+    const rows = list.map(u => `
+        <tr class="${isSelf(u.id) ? 'admin-row-self' : ''}">
+            <td><span class="admin-id-badge">#${u.id}</span></td>
+            <td>
+                <div class="admin-user-cell">
+                    <span class="admin-avatar">${(u.firstName?.[0] || '?').toUpperCase()}</span>
+                    <div>
+                        <strong>${escHtml(u.firstName || '')} ${escHtml(u.lastName || '')}</strong>
+                        ${isSelf(u.id) ? '<span class="admin-you-tag">Tú</span>' : ''}
+                    </div>
+                </div>
+            </td>
+            <td>${escHtml(u.email || '—')}</td>
+            <td><span class="app-role-badge ${u.role === 'ADMIN' ? 'app-role-badge--admin' : ''}">${u.role || 'USER'}</span></td>
+            <td>${u.enabled
+                ? '<span class="app-status-tag status-paid">Verificado</span>'
+                : '<span class="app-status-tag status-draft">Sin verificar</span>'
+            }</td>
+            <td>
+                <div class="admin-actions">
+                    <button class="app-icon-btn admin-edit-btn" data-id="${u.id}" title="Editar">✏️</button>
+                    <button class="app-icon-btn admin-delete-btn" data-id="${u.id}" ${isSelf(u.id) ? 'disabled title="No puedes eliminarte a ti mismo"' : 'title="Eliminar usuario"'}>🗑</button>
+                </div>
+            </td>
+        </tr>`).join('');
+
+    wrapper.innerHTML = `
+        <table class="app-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+
+    wrapper.querySelectorAll('.admin-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => openEditModal(btn.dataset.id));
+    });
+    wrapper.querySelectorAll('.admin-delete-btn:not([disabled])').forEach(btn => {
+        btn.addEventListener('click', () => confirmDeleteUser(btn.dataset.id));
+    });
+}
+
+async function confirmDeleteUser(id) {
+    const user = allUsers.find(u => String(u.id) === String(id));
+    if (!user) return;
+    const name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email;
+    if (!confirm(`¿Eliminar al usuario "${name}"? Esta acción no se puede deshacer.`)) return;
+
+    try {
+        const res = await fetch(`${CUSTOMER_API}/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        showToast(`Usuario "${name}" eliminado`);
+        await loadAdminView();
+    } catch (err) {
+        showToast('No se pudo eliminar el usuario: ' + err.message, 'error');
+    }
+}
+
+function openEditModal(id) {
+    const user = allUsers.find(u => String(u.id) === String(id));
+    if (!user) return;
+
+    document.getElementById('editUserId').value   = user.id;
+    document.getElementById('editFirstName').value = user.firstName || '';
+    document.getElementById('editLastName').value  = user.lastName  || '';
+    document.getElementById('editEmail').value     = user.email     || '';
+    document.getElementById('editRole').value      = user.role      || 'USER';
+    document.getElementById('editEnabled').value   = String(user.enabled);
+
+    document.getElementById('adminModalOverlay').style.display = 'flex';
+}
+
+function closeEditModal() {
+    document.getElementById('adminModalOverlay').style.display = 'none';
+}
+
+async function saveUserEdit() {
+    const id        = document.getElementById('editUserId').value;
+    const firstName = document.getElementById('editFirstName').value.trim();
+    const lastName  = document.getElementById('editLastName').value.trim();
+    const email     = document.getElementById('editEmail').value.trim();
+    const role      = document.getElementById('editRole').value;
+    const enabled   = document.getElementById('editEnabled').value === 'true';
+
+    if (!firstName || !email) {
+        showToast('Nombre y email son obligatorios', 'error');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${CUSTOMER_API}/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ firstName, lastName, email, role, enabled })
+        });
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        showToast('Usuario actualizado ✓');
+        closeEditModal();
+        await loadAdminView();
+    } catch (err) {
+        showToast('No se pudo actualizar: ' + err.message, 'error');
+    }
+}
+
+function initAdminPanel() {
+    document.getElementById('adminRefreshBtn').addEventListener('click', loadAdminView);
+    document.getElementById('adminModalClose').addEventListener('click', closeEditModal);
+    document.getElementById('adminModalCancel').addEventListener('click', closeEditModal);
+    document.getElementById('adminModalSave').addEventListener('click', saveUserEdit);
+    document.getElementById('adminModalOverlay').addEventListener('click', e => {
+        if (e.target === document.getElementById('adminModalOverlay')) closeEditModal();
+    });
+    document.getElementById('adminSearch').addEventListener('input', e =>
+        renderAdminTable(document.getElementById('adminFilter').value, e.target.value)
+    );
+    document.getElementById('adminFilter').addEventListener('change', e =>
+        renderAdminTable(e.target.value, document.getElementById('adminSearch').value)
+    );
+}
+
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}

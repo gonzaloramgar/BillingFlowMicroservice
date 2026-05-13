@@ -44,6 +44,10 @@
                     <span class="app-nav-icon">&#9881;</span>
                     <span>Perfil</span>
                 </button>
+                <button class="app-nav-item app-nav-admin" data-view="admin" id="adminNavBtn" style="display:none">
+                    <span class="app-nav-icon">&#128737;</span>
+                    <span>Admin</span>
+                </button>
             </nav>
         </aside>
 
@@ -350,6 +354,105 @@
 
                         <div class="app-profile-actions">
                             <button class="btn-secondary" id="profileLogoutBtn">Cerrar sesión</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+            <!-- ======= VISTA: ADMIN ======= -->
+            <section class="app-view" id="view-admin" style="display:none">
+                <div class="app-view-header">
+                    <div>
+                        <h1>Panel de Administración</h1>
+                        <p class="app-view-subtitle">Gestión completa de usuarios registrados</p>
+                    </div>
+                    <button class="btn-large" id="adminRefreshBtn">&#8635; Actualizar</button>
+                </div>
+
+                <div class="app-stats-grid" id="adminStatsGrid">
+                    <div class="app-stat-card">
+                        <span class="app-stat-label">Total usuarios</span>
+                        <strong class="app-stat-value" id="adminStatTotal">—</strong>
+                    </div>
+                    <div class="app-stat-card accent-green">
+                        <span class="app-stat-label">Verificados</span>
+                        <strong class="app-stat-value" id="adminStatEnabled">—</strong>
+                    </div>
+                    <div class="app-stat-card accent-yellow">
+                        <span class="app-stat-label">Sin verificar</span>
+                        <strong class="app-stat-value" id="adminStatDisabled">—</strong>
+                    </div>
+                    <div class="app-stat-card accent-blue">
+                        <span class="app-stat-label">Administradores</span>
+                        <strong class="app-stat-value" id="adminStatAdmins">—</strong>
+                    </div>
+                </div>
+
+                <div class="app-card">
+                    <div class="app-toolbar">
+                        <input class="app-search" type="text" id="adminSearch" placeholder="Buscar por nombre, email…">
+                        <select class="app-filter-select" id="adminFilter">
+                            <option value="all">Todos</option>
+                            <option value="enabled">Verificados</option>
+                            <option value="disabled">Sin verificar</option>
+                            <option value="admin">Administradores</option>
+                        </select>
+                    </div>
+
+                    <div id="adminTableWrapper">
+                        <div class="app-empty-state">
+                            <div class="app-empty-icon">⏳</div>
+                            <p>Cargando usuarios…</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL EDITAR USUARIO -->
+                <div class="admin-modal-overlay" id="adminModalOverlay" style="display:none">
+                    <div class="admin-modal">
+                        <div class="admin-modal-header">
+                            <h3>Editar usuario</h3>
+                            <button class="app-icon-btn" id="adminModalClose">✕</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <input type="hidden" id="editUserId">
+                            <div class="app-form-row">
+                                <div class="app-field">
+                                    <label>Nombre</label>
+                                    <input type="text" id="editFirstName" placeholder="Nombre">
+                                </div>
+                                <div class="app-field">
+                                    <label>Apellidos</label>
+                                    <input type="text" id="editLastName" placeholder="Apellidos">
+                                </div>
+                            </div>
+                            <div class="app-field">
+                                <label>Email</label>
+                                <input type="email" id="editEmail" placeholder="email@ejemplo.com">
+                            </div>
+                            <div class="app-form-row">
+                                <div class="app-field">
+                                    <label>Rol</label>
+                                    <select id="editRole">
+                                        <option value="USER">USER</option>
+                                        <option value="ADMIN">ADMIN</option>
+                                    </select>
+                                </div>
+                                <div class="app-field">
+                                    <label>Estado</label>
+                                    <select id="editEnabled">
+                                        <option value="true">Verificado</option>
+                                        <option value="false">Sin verificar</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="admin-modal-footer">
+                            <button class="btn-secondary" id="adminModalCancel">Cancelar</button>
+                            <button class="btn-large" id="adminModalSave">Guardar cambios</button>
                         </div>
                     </div>
                 </div>

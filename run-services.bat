@@ -30,5 +30,9 @@ timeout /t 8 /nobreak >nul
 echo Iniciando customer-service...
 start "customer-service" cmd /k "cd /d "%ROOT%customer-service" && mvn spring-boot:run"
 timeout /t 8 /nobreak >nul
+
+echo Iniciando invoice-service...
+start "invoice-service" cmd /k "cd /d "%ROOT%invoice-service" && mvn spring-boot:run"
+timeout /t 8 /nobreak >nul
 echo Todos los servicios fueron lanzados.
 endlocal
