@@ -250,13 +250,17 @@
             const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             const splashDuration = reduceMotion ? 900 : 2300;
             const splashFadeDuration = reduceMotion ? 320 : 760;
+            const splashKey = 'billingflow_splash_shown';
 
             const enableMainPage = () => {
                 body.classList.remove('splash-active');
                 body.classList.add('page-ready');
             };
 
-            if (splash) {
+            const splashAlreadySeen = sessionStorage.getItem(splashKey);
+
+            if (splash && !splashAlreadySeen) {
+                sessionStorage.setItem(splashKey, '1');
                 setTimeout(() => {
                     splash.classList.add('fade-out');
                     enableMainPage();
@@ -266,6 +270,7 @@
                     }, splashFadeDuration + 80);
                 }, splashDuration);
             } else {
+                if (splash) splash.remove();
                 enableMainPage();
             }
 

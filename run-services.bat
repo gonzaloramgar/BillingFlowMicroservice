@@ -24,7 +24,7 @@ start "payment-service" cmd /k "cd /d "%ROOT%payment-service" && mvn spring-boot
 timeout /t 8 /nobreak >nul
 
 echo Iniciando Webhook Listener...
-start "webhook-listener" cmd /k "\stripe listen --forward-to localhost:8081/webhook/stripe"
+start "webhook-listener" cmd /k ".\stripe listen --forward-to localhost:8081/api/payments/webhook"
 timeout /t 8 /nobreak >nul
 
 echo Iniciando customer-service...

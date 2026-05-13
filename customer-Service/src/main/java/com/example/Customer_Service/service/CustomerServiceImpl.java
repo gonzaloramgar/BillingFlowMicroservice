@@ -7,6 +7,7 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.Customer_Service.model.Customer;
@@ -14,6 +15,8 @@ import com.example.Customer_Service.repository.CustomerRepository;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
+
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Autowired
     private CustomerRepository customerRepository;
@@ -32,6 +35,9 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setCodeExpiration(LocalDateTime.now().plusMinutes(20));
         customer.setEnabled(false);
         customer.setFailedAttemps(0);
+
+        // Hashear la contraseña antes de almacenarla
+        customer.setPassword(passwordEncoder.encode(customer.getPassword()));
         
         // CORRECCIÓN: Asignamos un rol por defecto ya en la memoria
         if (customer.getRole() == null) {
@@ -154,8 +160,8 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Customer login(String email, String password) {
         return customerRepository.findByEmail(email)
-            .filter(c -> c.getPassword().equals(password))
             .filter(Customer::getEnabled)
+            .filter(c -> passwordEncoder.matches(password, c.getPassword()))
             .orElseThrow(() -> new RuntimeException("Credenciales incorrectas o cuenta no verificada"));
     }
 }

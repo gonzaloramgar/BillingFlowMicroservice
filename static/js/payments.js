@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const btnComprar = document.getElementById('btn-comprar');
     const mensajeStatus = document.getElementById('mensaje-status');
     const appBaseUrl = `${window.location.origin}${window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'))}`;
@@ -44,6 +44,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Compatibilidad con flujo antiguo (éxito que vuelve a checkout)
     if (urlParams.get('success') === 'true') {
+        // Ocultar el contenido del checkout inmediatamente para evitar el parpadeo
+        const checkoutLayout = document.querySelector('.checkout-layout');
+        if (checkoutLayout) checkoutLayout.style.display = 'none';
+
         const successParams = new URLSearchParams();
         successParams.set('fromPayment', 'true');
 
@@ -55,14 +59,13 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem(paymentEmailStorageKey, email);
         }
 
-        setTimeout(async () => {
-            const registerBaseUrl = await resolveRegisterUrl();
-            window.location.href = `${registerBaseUrl}?${successParams.toString()}`;
-        }, 1200);
         setStatusMessage(
             '¡Pago recibido! Redirigiendo al registro...',
             'status-msg success'
         );
+
+        const registerBaseUrl = await resolveRegisterUrl();
+        window.location.href = `${registerBaseUrl}?${successParams.toString()}`;
         return;
     }
 
