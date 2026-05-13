@@ -17,7 +17,11 @@ if (prefilledEmail) {
 }
 
 if (queryParams.get('verified') === 'true') {
-    alert('Cuenta verificada correctamente. Ya puedes iniciar sesión.');
+    const banner = document.getElementById('verifiedBanner');
+    if (banner) {
+        banner.style.display = 'flex';
+        setTimeout(() => banner.classList.add('verified-banner--hide'), 4000);
+    }
 }
 
 loginForm.addEventListener('submit', async (event) => {
@@ -53,7 +57,7 @@ loginForm.addEventListener('submit', async (event) => {
             loginSuccessMessage.style.display = 'block';
 
             setTimeout(() => {
-                window.location.href = 'index.html?login=ok';
+                window.location.href = 'app.html';
             }, 1400);
             return;
         }

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BillingFlow — App</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app-page">
+
+    <!-- TOP NAV -->
+    <header class="app-topbar">
+        <a href="index.html" class="logo-link app-logo">
+            <img src="img/logo.png" alt="BillingFlow" class="logo-img">
+        </a>
+        <div class="app-topbar-right">
+            <span class="app-user-badge" id="topbarUserName">…</span>
+            <button class="app-logout-btn" id="logoutBtn">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <div class="app-shell">
+
+        <!-- SIDEBAR -->
+        <aside class="app-sidebar" id="appSidebar">
+            <nav class="app-nav">
+                <button class="app-nav-item active" data-view="dashboard">
+                    <span class="app-nav-icon">&#9956;</span>
+                    <span>Inicio</span>
+                </button>
+                <button class="app-nav-item" data-view="nueva-factura">
+                    <span class="app-nav-icon">&#43;</span>
+                    <span>Nueva Factura</span>
+                </button>
+                <button class="app-nav-item" data-view="mis-facturas">
+                    <span class="app-nav-icon">&#128196;</span>
+                    <span>Mis Facturas</span>
+                </button>
+                <button class="app-nav-item" data-view="clientes">
+                    <span class="app-nav-icon">&#128100;</span>
+                    <span>Clientes</span>
+                </button>
+                <button class="app-nav-item" data-view="perfil">
+                    <span class="app-nav-icon">&#9881;</span>
+                    <span>Perfil</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="app-main" id="appMain">
+
+            <!-- ======= VISTA: DASHBOARD ======= -->
+            <section class="app-view" id="view-dashboard">
+                <div class="app-view-header">
+                    <div>
+                        <h1 id="dashboardWelcome">Bienvenido</h1>
+                        <p class="app-view-subtitle">Aquí tienes un resumen de tu actividad</p>
+                    </div>
+                    <button class="btn-large app-btn-new" data-view="nueva-factura">
+                        + Nueva Factura
+                    </button>
+                </div>
+
+                <div class="app-stats-grid">
+                    <div class="app-stat-card">
+                        <span class="app-stat-label">Total facturas</span>
+                        <strong class="app-stat-value" id="statTotal">0</strong>
+                    </div>
+                    <div class="app-stat-card accent-green">
+                        <span class="app-stat-label">Ingresos totales</span>
+                        <strong class="app-stat-value" id="statRevenue">€0,00</strong>
+                    </div>
+                    <div class="app-stat-card accent-yellow">
+                        <span class="app-stat-label">Pendientes de cobro</span>
+                        <strong class="app-stat-value" id="statPending">0</strong>
+                    </div>
+                    <div class="app-stat-card accent-blue">
+                        <span class="app-stat-label">Este mes</span>
+                        <strong class="app-stat-value" id="statThisMonth">0</strong>
+                    </div>
+                </div>
+
+                <div class="app-card">
+                    <div class="app-card-header">
+                        <h2>Últimas facturas</h2>
+                        <button class="app-link" data-view="mis-facturas">Ver todas →</button>
+                    </div>
+                    <div id="dashboardInvoiceList">
+                        <div class="app-empty-state">
+                            <div class="app-empty-icon">📄</div>
+                            <p>Aún no has creado ninguna factura</p>
+                            <button class="btn-large app-btn-new" data-view="nueva-factura">Crear primera factura</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======= VISTA: NUEVA FACTURA ======= -->
+            <section class="app-view" id="view-nueva-factura" style="display:none">
+                <div class="app-view-header">
+                    <div>
+                        <h1>Nueva Factura</h1>
+                        <p class="app-view-subtitle">Rellena los datos para generar tu factura en PDF</p>
+                    </div>
+                </div>
+
+                <form class="app-invoice-form" id="invoiceForm" novalidate>
+                    <div class="app-form-grid">
+
+                        <!-- COLUMNA IZQUIERDA -->
+                        <div class="app-form-col">
+                            <div class="app-card">
+                                <h3 class="app-card-title">Datos del emisor</h3>
+                                <div class="app-form-row">
+                                    <div class="app-field">
+                                        <label>Nombre / Razón social *</label>
+                                        <input type="text" id="emisorNombre" placeholder="Tu nombre o empresa" required>
+                                    </div>
+                                    <div class="app-field">
+                                        <label>NIF / CIF *</label>
+                                        <input type="text" id="emisorNif" placeholder="12345678A" required>
+                                    </div>
+                                </div>
+                                <div class="app-field">
+                                    <label>Dirección *</label>
+                                    <input type="text" id="emisorDireccion" placeholder="Calle Mayor 1, 28001 Madrid" required>
+                                </div>
+                                <div class="app-form-row">
+                                    <div class="app-field">
+                                        <label>Email</label>
+                                        <input type="email" id="emisorEmail" placeholder="tu@email.com">
+                                    </div>
+                                    <div class="app-field">
+                                        <label>Teléfono</label>
+                                        <input type="tel" id="emisorTelefono" placeholder="+34 600 123 456">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="app-card">
+                                <h3 class="app-card-title">Datos del cliente</h3>
+                                <div class="app-form-row">
+                                    <div class="app-field">
+                                        <label>Nombre / Empresa *</label>
+                                        <input type="text" id="clienteNombre" placeholder="Empresa del cliente" required>
+                                    </div>
+                                    <div class="app-field">
+                                        <label>NIF / CIF *</label>
+                                        <input type="text" id="clienteNif" placeholder="B12345678" required>
+                                    </div>
+                                </div>
+                                <div class="app-field">
+                                    <label>Dirección *</label>
+                                    <input type="text" id="clienteDireccion" placeholder="Av. de la Constitución 10, 41001 Sevilla" required>
+                                </div>
+                                <div class="app-form-row">
+                                    <div class="app-field">
+                                        <label>Email del cliente</label>
+                                        <input type="email" id="clienteEmail" placeholder="cliente@empresa.com">
+                                    </div>
+                                    <div class="app-field">
+                                        <label>Teléfono</label>
+                                        <input type="tel" id="clienteTelefono" placeholder="+34 910 000 000">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- COLUMNA DERECHA -->
+                        <div class="app-form-col">
+                            <div class="app-card">
+                                <h3 class="app-card-title">Datos de la factura</h3>
+                                <div class="app-form-row">
+                                    <div class="app-field">
+                                        <label>Número de factura *</label>
+                                        <input type="text" id="facturaNumero" placeholder="FAC-2026-001" required>
+                                    </div>
+                                    <div class="app-field">
+                                        <label>Fecha de emisión *</label>
+                                        <input type="date" id="facturaFecha" required>
+                                    </div>
+                                </div>
+                                <div class="app-form-row">
+                                    <div class="app-field">
+                                        <label>Fecha de vencimiento</label>
+                                        <input type="date" id="facturaVencimiento">
+                                    </div>
+                                    <div class="app-field">
+                                        <label>IVA aplicable</label>
+                                        <select id="facturaIva">
+                                            <option value="21">21%</option>
+                                            <option value="10">10%</option>
+                                            <option value="4">4%</option>
+                                            <option value="0">0% (exento)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="app-card">
+                                <div class="app-card-header">
+                                    <h3 class="app-card-title">Líneas de factura</h3>
+                                    <button type="button" class="app-link" id="addLineBtn">+ Añadir línea</button>
+                                </div>
+
+                                <div class="app-invoice-lines-header">
+                                    <span>Descripción</span>
+                                    <span>Cant.</span>
+                                    <span>Precio ud.</span>
+                                    <span>Total</span>
+                                    <span></span>
+                                </div>
+
+                                <div id="invoiceLines">
+                                    <!-- Las líneas se generan con JS -->
+                                </div>
+
+                                <div class="app-invoice-totals">
+                                    <div class="app-totals-row">
+                                        <span>Base imponible</span>
+                                        <strong id="totalBase">€0,00</strong>
+                                    </div>
+                                    <div class="app-totals-row">
+                                        <span>IVA (<span id="ivaLabel">21</span>%)</span>
+                                        <strong id="totalIva">€0,00</strong>
+                                    </div>
+                                    <div class="app-totals-row total-final">
+                                        <span>Total</span>
+                                        <strong id="totalFinal">€0,00</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="app-card">
+                                <h3 class="app-card-title">Notas / Condiciones de pago</h3>
+                                <textarea id="facturaNota" class="app-textarea" placeholder="Ej: Pago a 30 días. Transferencia bancaria a IBAN ES12 3456 7890 1234 5678 90"></textarea>
+                            </div>
+
+                            <div class="app-invoice-actions">
+                                <div class="app-coming-soon-notice" id="comingSoonNotice">
+                                    <span>🔧</span>
+                                    <span>La generación de PDF estará disponible cuando el <strong>Invoice Service</strong> esté activo</span>
+                                </div>
+                                <button type="submit" class="btn-large" id="generateBtn" disabled>
+                                    Generar PDF
+                                </button>
+                                <button type="button" class="btn-secondary" id="saveBtn">
+                                    Guardar borrador
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </section>
+
+            <!-- ======= VISTA: MIS FACTURAS ======= -->
+            <section class="app-view" id="view-mis-facturas" style="display:none">
+                <div class="app-view-header">
+                    <div>
+                        <h1>Mis Facturas</h1>
+                        <p class="app-view-subtitle">Historial de todas tus facturas</p>
+                    </div>
+                    <button class="btn-large app-btn-new" data-view="nueva-factura">
+                        + Nueva Factura
+                    </button>
+                </div>
+
+                <div class="app-card">
+                    <div class="app-toolbar">
+                        <input class="app-search" type="text" id="invoiceSearch" placeholder="Buscar por cliente, número…">
+                        <select class="app-filter-select" id="invoiceFilter">
+                            <option value="all">Todas</option>
+                            <option value="paid">Pagadas</option>
+                            <option value="pending">Pendientes</option>
+                            <option value="draft">Borradores</option>
+                        </select>
+                    </div>
+
+                    <div id="invoiceTableWrapper">
+                        <div class="app-empty-state">
+                            <div class="app-empty-icon">📋</div>
+                            <p>No hay facturas aún</p>
+                            <button class="btn-large app-btn-new" data-view="nueva-factura">Crear primera factura</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======= VISTA: CLIENTES ======= -->
+            <section class="app-view" id="view-clientes" style="display:none">
+                <div class="app-view-header">
+                    <div>
+                        <h1>Clientes</h1>
+                        <p class="app-view-subtitle">Gestiona tu cartera de clientes</p>
+                    </div>
+                    <button class="btn-large" id="newClientBtn">+ Nuevo cliente</button>
+                </div>
+
+                <div class="app-card">
+                    <div class="app-empty-state">
+                        <div class="app-empty-icon">👥</div>
+                        <p>Aún no tienes clientes guardados</p>
+                        <span class="app-coming-soon-tag">Próximamente</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======= VISTA: PERFIL ======= -->
+            <section class="app-view" id="view-perfil" style="display:none">
+                <div class="app-view-header">
+                    <div>
+                        <h1>Mi Perfil</h1>
+                        <p class="app-view-subtitle">Datos de tu cuenta BillingFlow</p>
+                    </div>
+                </div>
+
+                <div class="app-profile-grid">
+                    <div class="app-card app-profile-card">
+                        <div class="app-profile-avatar" id="profileAvatar">?</div>
+                        <h2 id="profileName">—</h2>
+                        <span class="app-role-badge" id="profileRole">USER</span>
+                        <p class="app-profile-email" id="profileEmail">—</p>
+                    </div>
+
+                    <div class="app-card">
+                        <h3 class="app-card-title">Información de la cuenta</h3>
+                        <div class="app-profile-info-list">
+                            <div class="app-profile-info-row">
+                                <span class="app-profile-info-label">ID de usuario</span>
+                                <span id="profileId">—</span>
+                            </div>
+                            <div class="app-profile-info-row">
+                                <span class="app-profile-info-label">Email</span>
+                                <span id="profileEmail2">—</span>
+                            </div>
+                            <div class="app-profile-info-row">
+                                <span class="app-profile-info-label">Nombre</span>
+                                <span id="profileFullName">—</span>
+                            </div>
+                            <div class="app-profile-info-row">
+                                <span class="app-profile-info-label">Rol</span>
+                                <span id="profileRole2">—</span>
+                            </div>
+                            <div class="app-profile-info-row">
+                                <span class="app-profile-info-label">Estado</span>
+                                <span class="pill-success">Verificado ✓</span>
+                            </div>
+                        </div>
+
+                        <div class="app-profile-actions">
+                            <button class="btn-secondary" id="profileLogoutBtn">Cerrar sesión</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div class="app-toast" id="appToast" aria-live="polite"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
