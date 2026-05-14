@@ -89,23 +89,99 @@ Todos los microservicios se registran en Eureka. El API Gateway actúa como úni
 
 ## Cómo arrancar el proyecto
 
-El fichero `run-services.bat` arranca todos los servicios en el orden correcto con las pausas necesarias entre ellos:
+### Guía rápida (recomendada)
+
+Sigue estos pasos en orden. Si haces esto exactamente así, el entorno de test debería quedar funcionando sin problemas.
+
+#### Paso 1: Abrir terminal en la raíz del proyecto
+
+Debes estar en la carpeta donde están `run-services.bat` y `stripe.exe`.
+
+```powershell
+cd BillingFlowMicroservice
+```
+#### Paso 2: Preparar dependencias locales
+
+1. Arranca MySQL (puerto 3306).
+2. Comprueba Java 17 y Maven:
+
+```powershell
+java -version
+mvn -v
+```
+
+3. Inicia sesión en Stripe con el ejecutable local (sin permisos de admin):
+
+```powershell
+.\stripe.exe logout
+.\stripe.exe login
+```
+
+#### Paso 3: Arrancar todos los servicios
+
+Ejecuta:
 
 ```bat
 run-services.bat
 ```
 
-**Orden de arranque:**
+El script levanta, en este orden:
 
-1. **Discovery Server** (8761) — espera 10 s
-2. **Config Server** (8888) — espera 10 s
-3. **Security Service** (9000) — espera 8 s
-4. **API Gateway** (8080) — espera 8 s
-5. **Payment Service** (8081) — espera 8 s
-6. **Stripe Webhook Listener** — espera 8 s
-7. **Customer Service** (8082)
+1. discovery-server (8761)
+2. config-server (8888)
+3. security-service (9000)
+4. api-gateway (8080)
+5. payment-service (8081)
+6. webhook listener de Stripe
+7. customer-service (8082)
+8. invoice-service (8083)
 
-Tras el arranque, abre `static/index.html` con Live Server (o cualquier servidor HTTP local en el puerto `5500` o `5501`).
+#### Paso 4: Stripe webhook (automático con el .bat)
+
+Si arrancas con `run-services.bat`, NO necesitas ejecutar nada más: el script ya levanta el webhook listener de Stripe automáticamente.
+
+Solo usa este comando manualmente si estás depurando o si no usaste el .bat:
+
+```powershell
+.\stripe.exe listen --forward-to http://localhost:8081/api/payments/webhook
+```
+
+Stripe mostrará una clave `whsec_...`. Esa clave debe coincidir con `stripe.webhook.secret` del payment-service para que se guarde en base de datos.
+
+Importante: no lances dos listeners a la vez (uno del .bat y otro manual), porque puedes confundir el `whsec_...` activo.
+
+#### Paso 5: Verificación rápida antes de probar el frontend
+
+1. Eureka abierto en `http://localhost:8761` con servicios registrados.
+2. Payment Service respondiendo en `http://localhost:8081`.
+3. Frontend servido con Live Server en `http://localhost:5500` o `http://localhost:5501`.
+
+#### Paso 6: Flujo de prueba completo
+
+1. Abre `static/index.html` con Live Server.
+2. Ve a compra y crea sesión de pago.
+3. Paga con tarjeta de test: `4242 4242 4242 4242`.
+4. Comprueba en consola de payment-service que entra `checkout.session.completed`.
+5. Comprueba en MySQL que se inserta en `payment_transactions`.
+6. Termina registro, verificación por código y login.
+
+### Diagnóstico rápido (cuando falla algo)
+
+1. No guarda tras pagar:
+   - Revisa que Stripe esté escuchando a `http://localhost:8081/api/payments/webhook`.
+   - Revisa que `stripe.webhook.secret` sea el correcto para esa sesión/listener.
+2. Error 401 en rutas protegidas:
+   - Cierra sesión y vuelve a loguear para regenerar JWT.
+3. Servicios no aparecen en Eureka:
+   - Reinicia en este orden: discovery -> config -> resto.
+4. No llega email de verificación:
+   - Revisa credenciales SMTP/SendGrid.
+
+### Nota de equipo (Stripe)
+
+1. `stripe.api.key` de test se puede compartir.
+2. `stripe.webhook.secret` puede cambiar entre máquinas o sesiones de `stripe listen`.
+3. Usad siempre `.\stripe.exe` local del proyecto para evitar problemas de permisos.
 
 ---
 
