@@ -117,6 +117,16 @@ mvn -v
 .\stripe.exe login
 ```
 
+Si todo va bien, la CLI abrirá el navegador para autorizar y luego verás algo similar en terminal:
+
+```text
+Your pairing code is: gentle-sky-1234
+This pairing code verifies your authentication with Stripe.
+Done! The Stripe CLI is configured for acct_XXXXXXXXXXXX.
+```
+
+Si no aparece `Done!`, la sesión de Stripe no quedó iniciada correctamente.
+
 #### Paso 3: Arrancar todos los servicios
 
 Ejecuta:
@@ -148,6 +158,24 @@ Solo usa este comando manualmente si estás depurando o si no usaste el .bat:
 
 Stripe mostrará una clave `whsec_...`. Esa clave debe coincidir con `stripe.webhook.secret` del payment-service para que se guarde en base de datos.
 
+Ejemplo real de salida al arrancar el listener:
+
+```text
+> Ready! You are using Stripe API Version [2024-06-20]
+> Your webhook signing secret is whsec_51Rxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+Dónde pegar ese código:
+
+1. Copia el valor completo que empieza por `whsec_`.
+2. Pégalo en `payment-service/src/main/resources/application.properties` en:
+
+```properties
+stripe.webhook.secret=whsec_51Rxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+3. Reinicia `payment-service` para que tome el nuevo secreto.
+
 Importante: no lances dos listeners a la vez (uno del .bat y otro manual), porque puedes confundir el `whsec_...` activo.
 
 #### Paso 5: Verificación rápida antes de probar el frontend
@@ -164,6 +192,22 @@ Importante: no lances dos listeners a la vez (uno del .bat y otro manual), porqu
 4. Comprueba en consola de payment-service que entra `checkout.session.completed`.
 5. Comprueba en MySQL que se inserta en `payment_transactions`.
 6. Termina registro, verificación por código y login.
+
+#### Paso 7: Login correcto en la aplicación (sin errores 401)
+
+1. Regístrate y verifica el código de 6 dígitos.
+2. Entra en `login.html` y usa exactamente el mismo email verificado.
+3. Si el login es correcto, el frontend guarda token/sesión en `localStorage`.
+4. Si ves 401 en acciones protegidas, cierra sesión y vuelve a iniciar sesión para regenerar token.
+
+Ejemplo de respuesta esperada en login exitoso (resumen):
+
+```json
+{
+   "token": "eyJhbGciOiJIUzI1NiJ9...",
+   "email": "usuario@correo.com"
+}
+```
 
 ### Diagnóstico rápido (cuando falla algo)
 
@@ -453,3 +497,22 @@ Antes de arrancar el proyecto, revisar y actualizar los siguientes valores:
 | Repositorio Git del Config Server | — | `jwt.secret` | Clave Base64 para firmar los JWT |
 
 > **Nota:** Para pruebas de pago en Stripe usa la tarjeta `4242 4242 4242 4242` con cualquier fecha futura y cualquier CVC.
+
+### Ejemplos de códigos y dónde ponerlos
+
+Usa esta tabla como guía rápida de copiar/pegar:
+
+| Código | Ejemplo | Dónde se obtiene | Dónde se configura |
+|---|---|---|---|
+| Stripe secret key | `sk_test_51Rabc...` | Dashboard de Stripe (Developers > API keys) | `payment-service/src/main/resources/application.properties` en `stripe.api.key=` |
+| Stripe webhook secret | `whsec_51Rdef...` | Salida de `stripe listen` | `payment-service/src/main/resources/application.properties` en `stripe.webhook.secret=` |
+| Stripe checkout session id | `cs_test_a1b2c3...` | URL de retorno `?session_id=...` tras pagar | No se guarda manualmente; lo consume el frontend en `checkout.html` / `register.html` |
+| JWT secret (Base64) | `S2V5QmFzZTY0...` | Repositorio de config privado | Propiedad `jwt.secret` del repositorio de configuración usado por Config Server |
+
+Checklist rápido para no romper webhook:
+
+1. Arranca un único listener de Stripe.
+2. Copia el `whsec_...` de ese listener activo.
+3. Pega el valor en `stripe.webhook.secret`.
+4. Reinicia `payment-service`.
+5. Repite pago de prueba y valida que llega `checkout.session.completed`.
