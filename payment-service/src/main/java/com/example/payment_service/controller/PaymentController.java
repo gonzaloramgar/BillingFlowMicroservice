@@ -55,11 +55,9 @@ public class PaymentController {
                                 .setCurrency("eur")
                                 .setUnitAmount(amount) // El monto dinámico que viene del index.html
                                 .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                                        // --- AQUÍ VA EL BLOQUE QUE PREGUNTABAS ---
                                         .setName("Pago de Factura Personalizado") 
                                         .setDescription("ID de Factura: " + System.currentTimeMillis()) // Un ID temporal para que parezca real
                                         .build())
-                                        // -----------------------------------------
                                 .build())
                         .build());
                         
