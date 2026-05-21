@@ -343,7 +343,38 @@ function recalcInvoiceTotals() {
     document.getElementById('invoiceTotal').value = total.toFixed(2);
 }
 
-document.getElementById('invoiceMontoBase').addEventListener('input', recalcInvoiceTotals);
+// Validación estricta: SOLO números y hasta 2 decimales
+// Rechaza: múltiples signos, letra 'e', múltiples puntos, etc.
+function validateNumberInput(value) {
+    if (value === '') return '';
+
+    const validPattern = /^-?[0-9]+(\.[0-9]{1,2})?$/;
+
+    if (!validPattern.test(value)) {
+        let cleaned = value.replace(/[^0-9.-]/g, '');
+        cleaned = cleaned.replace(/\.+/g, '.');
+        cleaned = cleaned.replace(/-+/g, '-');
+        if (cleaned.indexOf('-') > 0) {
+            cleaned = cleaned.replace(/-/g, '');
+        }
+
+        const parts = cleaned.split('.');
+        if (parts.length > 2) {
+            cleaned = parts[0] + '.' + parts.slice(1).join('');
+        }
+        if (parts[1] && parts[1].length > 2) {
+            cleaned = parts[0] + '.' + parts[1].substring(0, 2);
+        }
+
+        return cleaned;
+    }
+    return value;
+}
+
+document.getElementById('invoiceMontoBase').addEventListener('input', (e) => {
+    e.target.value = validateNumberInput(e.target.value);
+    recalcInvoiceTotals();
+});
 document.getElementById('invoiceIvaPercent').addEventListener('change', recalcInvoiceTotals);
 
 // Autocompletar número de factura con fecha de hoy
