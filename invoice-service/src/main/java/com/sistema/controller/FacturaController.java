@@ -39,6 +39,8 @@ public class FacturaController {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
+    private static final int MAX_CLIENTE_LENGTH = 50;
+
     // 1. CREAR FACTURA Y GENERAR PDF (POST)
     @PostMapping
     public ResponseEntity<byte[]> crearFactura(
@@ -51,7 +53,16 @@ public class FacturaController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
+            String cliente = request.getCliente() == null ? "" : request.getCliente().trim();
+            if (cliente.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+            if (cliente.length() > MAX_CLIENTE_LENGTH) {
+                cliente = cliente.substring(0, MAX_CLIENTE_LENGTH);
+            }
+
             Factura factura = toEntity(request);
+            factura.setCliente(cliente);
             // Seguridad: ownerEmail identifica al usuario dueño, cliente es el dato visible de la factura.
             factura.setOwnerEmail(ownerEmail);
 

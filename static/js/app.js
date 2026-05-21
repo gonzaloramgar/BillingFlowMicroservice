@@ -4,6 +4,8 @@
 // ============================================================
 const INVOICE_API = 'http://localhost:8083/api/facturas';
 const CUSTOMER_API = 'http://localhost:8082/api/customers';
+const MAX_CLIENTE_LENGTH = 50;
+const MAX_CLIENTE_DISPLAY = 40;
 
 // ---- AUTH CHECK ----
 const raw = localStorage.getItem('currentCustomer');
@@ -99,6 +101,16 @@ function setInvoiceServiceNotice(isOnline, details = '') {
 }
 
 // ---- NAVIGATION ----
+function truncateText(text, maxLength) {
+    const safe = escHtml(String(text || ''));
+    if (safe.length <= maxLength) return safe;
+    return `${safe.slice(0, maxLength - 1)}…`;
+}
+
+function normalizeClientName(value) {
+    return String(value || '').trim().slice(0, MAX_CLIENTE_LENGTH);
+}
+
 function navigate(viewName) {
     document.querySelectorAll('.app-view').forEach(v => v.style.display = 'none');
     document.querySelectorAll('.app-nav-item').forEach(b => b.classList.remove('active'));
@@ -298,15 +310,19 @@ function buildInvoiceTable(list, withActions = false) {
     const statusLabel = { paid: 'Pagada', pending: 'Pendiente', draft: 'Borrador' };
     const statusClass = { paid: 'status-paid', pending: 'status-pending', draft: 'status-draft' };
 
-    const rows = list.map(f => `
+    const rows = list.map(f => {
+        const clienteEscaped = f.clienteNombre ? escHtml(f.clienteNombre) : '—';
+        const clienteDisplay = f.clienteNombre ? truncateText(f.clienteNombre, MAX_CLIENTE_DISPLAY) : '—';
+        return `
         <tr>
-            <td>${f.numero || '—'}</td>
-            <td>${f.clienteNombre || '—'}</td>
+            <td>${escHtml(f.numero || '—')}</td>
+            <td title="${clienteEscaped}">${clienteDisplay}</td>
             <td>${formatDate(f.fecha)}</td>
             <td>€${(f.total || 0).toFixed(2).replace('.', ',')}</td>
-            <td><span class="app-status-tag ${statusClass[f.status] || ''}">${statusLabel[f.status] || f.status}</span></td>
+            <td><span class="app-status-tag ${statusClass[f.status] || ''}">${statusLabel[f.status] || escHtml(f.status)}</span></td>
             ${withActions ? `<td>${f.source === 'draft' ? `<button class="app-action-btn app-edit-draft-btn" data-id="${f.id}" title="Editar borrador">Editar</button>` : ''} <button class="app-action-btn app-action-btn--danger app-delete-btn" data-id="${f.id}" title="Eliminar factura">Eliminar</button></td>` : ''}
-        </tr>`).join('');
+        </tr>`;
+    }).join('');
 
     return `
         <table class="app-table">
@@ -345,6 +361,16 @@ function recalcInvoiceTotals() {
     document.getElementById('invoiceIrpf').value = irpf.toFixed(2); 
     document.getElementById('invoiceTotal').value = total.toFixed(2);
 }
+
+document.getElementById('invoiceMontoBase').addEventListener('input', recalcInvoiceTotals);
+document.getElementById('invoiceIvaPercent').addEventListener('change', recalcInvoiceTotals);
+document.getElementById('invoiceCliente').addEventListener('input', e => {
+    const input = e.target;
+    if (input.value.length > MAX_CLIENTE_LENGTH) {
+        input.value = input.value.slice(0, MAX_CLIENTE_LENGTH);
+        showToast(`El nombre de cliente no puede exceder ${MAX_CLIENTE_LENGTH} caracteres`, 'error');
+    }
+});
 
 // Validación estricta: SOLO números y hasta 2 decimales
 // Rechaza: múltiples signos, letra 'e', múltiples puntos, etc.
@@ -494,7 +520,7 @@ function collectFormData() {
     return {
         numero: document.getElementById('facturaNumero').value,
         fecha: document.getElementById('invoiceFechaEmision').value,
-        clienteNombre: document.getElementById('invoiceCliente').value,
+        clienteNombre: normalizeClientName(document.getElementById('invoiceCliente').value),
         ivaPct,
         iva,
         irpfPct,
