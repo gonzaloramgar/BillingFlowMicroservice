@@ -649,6 +649,7 @@ function renderAdminTable(filter = 'all', search = '') {
     }
 
     const isSelf = id => String(id) === String(currentUser?.id);
+    const isAdminUser = u => (u?.role || '').toUpperCase() === 'ADMIN';
 
     const rows = list.map(u => `
         <tr class="${isSelf(u.id) ? 'admin-row-self' : ''}">
@@ -671,7 +672,7 @@ function renderAdminTable(filter = 'all', search = '') {
             <td>
                 <div class="admin-actions">
                     <button class="app-action-btn admin-edit-btn" data-id="${u.id}" title="Editar usuario">Editar</button>
-                    <button class="app-action-btn app-action-btn--danger admin-delete-btn" data-id="${u.id}" ${isSelf(u.id) ? 'disabled title="No puedes eliminarte a ti mismo"' : 'title="Eliminar usuario"'}>Eliminar</button>
+                    <button class="app-action-btn app-action-btn--danger admin-delete-btn" data-id="${u.id}" ${isSelf(u.id) ? 'disabled title="No puedes eliminarte a ti mismo"' : isAdminUser(u) ? 'disabled title="No se puede eliminar una cuenta ADMIN"' : 'title="Eliminar usuario"'}>Eliminar</button>
                 </div>
             </td>
         </tr>`).join('');
@@ -707,7 +708,10 @@ async function confirmDeleteUser(id) {
 
     try {
         const res = await fetch(`${CUSTOMER_API}/${id}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error(`Error ${res.status}`);
+        if (!res.ok) {
+            const msg = await readApiMessage(res);
+            throw new Error(msg || `Error ${res.status}`);
+        }
         showToast(`Usuario "${name}" eliminado`);
         await loadAdminView();
     } catch (err) {
@@ -723,7 +727,10 @@ function openEditModal(id) {
     document.getElementById('editFirstName').value = user.firstName || '';
     document.getElementById('editLastName').value  = user.lastName  || '';
     document.getElementById('editEmail').value     = user.email     || '';
-    document.getElementById('editRole').value      = user.role      || 'USER';
+    const editRole = document.getElementById('editRole');
+    editRole.value = user.role || 'USER';
+    editRole.disabled = (user.role || '').toUpperCase() === 'ADMIN';
+    editRole.title = editRole.disabled ? 'Una cuenta ADMIN no puede perder privilegios.' : '';
     document.getElementById('editEnabled').value   = String(user.enabled);
 
     document.getElementById('adminModalOverlay').style.display = 'flex';
@@ -752,7 +759,10 @@ async function saveUserEdit() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ firstName, lastName, email, role, enabled })
         });
-        if (!res.ok) throw new Error(`Error ${res.status}`);
+        if (!res.ok) {
+            const msg = await readApiMessage(res);
+            throw new Error(msg || `Error ${res.status}`);
+        }
         showToast('Usuario actualizado ✓');
         closeEditModal();
         await loadAdminView();
@@ -783,4 +793,18 @@ function escHtml(str) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+}
+
+async function readApiMessage(response) {
+    const text = await response.text();
+    if (!text) return '';
+    try {
+        const parsed = JSON.parse(text);
+        if (parsed && typeof parsed.message === 'string') {
+            return parsed.message;
+        }
+    } catch (e) {
+        // Fallback a texto plano.
+    }
+    return text;
 }

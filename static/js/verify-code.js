@@ -11,6 +11,7 @@ const verifyErrorText = document.getElementById('verifyErrorText');
 const verifyRetryBtn = document.getElementById('verifyRetryBtn');
 const verifyLoadingOverlay = document.getElementById('verifyLoadingOverlay');
 const verifyLoadingText = document.getElementById('verifyLoadingText');
+const verifyInfoMessage = document.getElementById('verifyInfoMessage');
 
 const urlParams = new URLSearchParams(window.location.search);
 const emailFromUrl = urlParams.get('email');
@@ -51,6 +52,7 @@ verifyForm.addEventListener('submit', async (event) => {
         });
 
         const responseText = await response.text();
+        const message = normalizeApiMessage(responseText);
 
         if (response.ok) {
             localStorage.removeItem('pendingVerificationEmail');
@@ -64,7 +66,7 @@ verifyForm.addEventListener('submit', async (event) => {
             return;
         }
 
-        showError(responseText || 'No se pudo verificar tu cuenta. Revisa el código e inténtalo otra vez.');
+        showError(message || 'No se pudo verificar tu cuenta. Revisa el código e inténtalo otra vez.');
     } catch (error) {
         showError('Error de conexión con customer-service. Verifica que el servicio esté levantado en el puerto 8082.');
     } finally {
@@ -95,10 +97,11 @@ resendBtn.addEventListener('click', async () => {
             body: JSON.stringify({ email })
         });
 
-        const message = await response.text();
+        const responseText = await response.text();
+        const message = normalizeApiMessage(responseText);
 
         if (response.ok) {
-            alert(message || 'Código reenviado correctamente.');
+            showInfo(message || 'Codigo reenviado correctamente.');
         } else {
             showError(message || 'No pudimos reenviar el código. Revisa el email y vuelve a intentarlo.');
         }
@@ -113,12 +116,46 @@ resendBtn.addEventListener('click', async () => {
 
 verifyRetryBtn.addEventListener('click', () => {
     verifyErrorMessage.style.display = 'none';
+    hideInfo();
     verifyForm.style.display = 'block';
 });
 
 function showError(message) {
+    hideInfo();
     verifyErrorText.textContent = message;
     verifyErrorMessage.style.display = 'block';
+}
+
+function showInfo(message) {
+    if (!verifyInfoMessage) {
+        return;
+    }
+
+    verifyErrorMessage.style.display = 'none';
+    verifyInfoMessage.textContent = message;
+    verifyInfoMessage.className = 'verify-inline-message success';
+    verifyInfoMessage.style.display = 'block';
+}
+
+function hideInfo() {
+    if (!verifyInfoMessage) {
+        return;
+    }
+    verifyInfoMessage.style.display = 'none';
+    verifyInfoMessage.textContent = '';
+}
+
+function normalizeApiMessage(responseText) {
+    if (!responseText) return '';
+    try {
+        const parsed = JSON.parse(responseText);
+        if (parsed && typeof parsed.message === 'string') {
+            return parsed.message;
+        }
+    } catch (e) {
+        // Si no es JSON, devolvemos texto plano.
+    }
+    return responseText;
 }
 
 function setLoading(isLoading, message = 'Procesando, espera un momento...') {

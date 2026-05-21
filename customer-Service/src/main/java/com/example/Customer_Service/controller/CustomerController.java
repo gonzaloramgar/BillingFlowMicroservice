@@ -98,13 +98,19 @@ public class CustomerController {
     // 2. Eliminar un usuario (Acción de ADMIN)
     @DeleteMapping("/{id}")
     public ResponseEntity<MessageResponse> delete(@PathVariable Long id) {
-        customerService.deleteCustomer(id);
-        return ResponseEntity.ok(new MessageResponse("Usuario eliminado correctamente por el administrador."));
+        try {
+            customerService.deleteCustomer(id);
+            return ResponseEntity.ok(new MessageResponse("Usuario eliminado correctamente por el administrador."));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageResponse(e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse(e.getMessage()));
+        }
     }
 
     // 3. Modificar datos de un usuario (Acción de ADMIN)
     @PutMapping("/{id}")
-    public ResponseEntity<CustomerResponse> update(@PathVariable Long id, @RequestBody UpdateCustomerRequest request) {
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody UpdateCustomerRequest request) {
         Customer customerDetails = new Customer();
         customerDetails.setFirstName(request.getFirstName());
         customerDetails.setLastName(request.getLastName());
@@ -112,7 +118,13 @@ public class CustomerController {
         customerDetails.setRole(request.getRole());
         customerDetails.setEnabled(request.getEnabled());
 
-        return ResponseEntity.ok(toResponse(customerService.updateCustomer(id, customerDetails)));
+        try {
+            return ResponseEntity.ok(toResponse(customerService.updateCustomer(id, customerDetails)));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageResponse(e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageResponse(e.getMessage()));
+        }
     }
 
     @PostMapping("/login")

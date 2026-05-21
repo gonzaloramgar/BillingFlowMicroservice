@@ -32,6 +32,10 @@ public class CustomerServiceImpl implements CustomerService {
         return email == null ? null : email.trim().toLowerCase();
     }
 
+    private boolean isAdminRole(String role) {
+        return role != null && "ADMIN".equalsIgnoreCase(role.trim());
+    }
+
     @Override
     public Customer registerCustomer(Customer customer) {
 
@@ -40,7 +44,7 @@ public class CustomerServiceImpl implements CustomerService {
             throw new RuntimeException("Debes indicar un email válido.");
         }
 
-        email = email.trim().toLowerCase();
+        email = normalizeEmail(email);
         customer.setEmail(email);
 
         if (customerRepository.findByEmail(email).isPresent()) {
@@ -77,7 +81,7 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         // 3. GUARDAR EN MEMORIA solo si el envio fue correcto
-        pendingCustomers.put(normalizedEmail, customer);
+        pendingCustomers.put(email, customer);
 
         return customer;
     }
@@ -90,13 +94,13 @@ public class CustomerServiceImpl implements CustomerService {
         if (customer != null) {
             if (customer.getFailedAttemps() >= 3) {
                 System.out.println("Superado límite de intentos en memoria. Registro cancelado.");
-                pendingCustomers.remove(email);
+                pendingCustomers.remove(normalizedEmail);
                 return false;
             }
 
             if (customer.getCodeExpiration().isBefore(LocalDateTime.now())) {
                 System.out.println("El código ha expirado en memoria.");
-                pendingCustomers.remove(email);
+                pendingCustomers.remove(normalizedEmail);
                 return false;
             }
 
@@ -114,7 +118,7 @@ public class CustomerServiceImpl implements CustomerService {
                 // ¡RECIÉN AQUÍ SE GUARDA EN LA BASE DE DATOS!
                 customerRepository.save(customer);
                 
-                pendingCustomers.remove(email);
+                pendingCustomers.remove(normalizedEmail);
                 System.out.println("¡Verificado! Usuario insertado en MySQL finalmente.");
                 return true;
             } else {
@@ -213,6 +217,13 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public void deleteCustomer(Long id) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        if (isAdminRole(customer.getRole())) {
+            throw new IllegalStateException("No se puede eliminar una cuenta ADMIN.");
+        }
+
         customerRepository.deleteById(id);
         System.out.println("ADMIN: Usuario con ID " + id + " eliminado.");
     }
@@ -221,6 +232,11 @@ public class CustomerServiceImpl implements CustomerService {
     public Customer updateCustomer(Long id, Customer customerDetails) {
         Customer customer = customerRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Regla de seguridad: una cuenta ADMIN no puede perder privilegios.
+        if (isAdminRole(customer.getRole()) && !isAdminRole(customerDetails.getRole())) {
+            throw new IllegalStateException("Una cuenta ADMIN no puede quitarse privilegios.");
+        }
     
         customer.setFirstName(customerDetails.getFirstName());
         customer.setLastName(customerDetails.getLastName());

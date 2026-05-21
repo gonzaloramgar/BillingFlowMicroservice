@@ -28,7 +28,7 @@ loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
     loginBtn.disabled = true;
-    loginBtn.textContent = 'Entrando...';
+    loginBtn.innerHTML = '<span class="btn-loader"></span> Entrando...';
 
     try {
         const response = await fetch(`${SECURITY_API_BASE}/login`, {
@@ -79,7 +79,7 @@ loginForm.addEventListener('submit', async (event) => {
         showError('Error de conexión con security-service en el puerto 9000.');
     } finally {
         loginBtn.disabled = false;
-        loginBtn.textContent = 'Entrar';
+        loginBtn.innerHTML = 'Entrar';
     }
 });
 
