@@ -9,6 +9,8 @@ const verifySuccessMessage = document.getElementById('verifySuccessMessage');
 const verifyErrorMessage = document.getElementById('verifyErrorMessage');
 const verifyErrorText = document.getElementById('verifyErrorText');
 const verifyRetryBtn = document.getElementById('verifyRetryBtn');
+const verifyLoadingOverlay = document.getElementById('verifyLoadingOverlay');
+const verifyLoadingText = document.getElementById('verifyLoadingText');
 
 const urlParams = new URLSearchParams(window.location.search);
 const emailFromUrl = urlParams.get('email');
@@ -37,6 +39,7 @@ verifyForm.addEventListener('submit', async (event) => {
 
     verifyBtn.disabled = true;
     verifyBtn.textContent = 'Verificando...';
+    setLoading(true, 'Verificando cuenta, espera un momento...');
 
     try {
         const response = await fetch(`${CUSTOMER_API_BASE}/verify`, {
@@ -65,6 +68,7 @@ verifyForm.addEventListener('submit', async (event) => {
     } catch (error) {
         showError('Error de conexión con customer-service. Verifica que el servicio esté levantado en el puerto 8082.');
     } finally {
+        setLoading(false);
         verifyBtn.disabled = false;
         verifyBtn.textContent = 'Verificar cuenta';
     }
@@ -80,6 +84,7 @@ resendBtn.addEventListener('click', async () => {
 
     resendBtn.disabled = true;
     resendBtn.textContent = 'Reenviando...';
+    setLoading(true, 'Reenviando código por correo, espera un momento...');
 
     try {
         const response = await fetch(`${CUSTOMER_API_BASE}/resend-code`, {
@@ -100,6 +105,7 @@ resendBtn.addEventListener('click', async () => {
     } catch (error) {
         showError('Error de conexión al reenviar el código.');
     } finally {
+        setLoading(false);
         resendBtn.disabled = false;
         resendBtn.textContent = 'Reenviar código';
     }
@@ -113,4 +119,13 @@ verifyRetryBtn.addEventListener('click', () => {
 function showError(message) {
     verifyErrorText.textContent = message;
     verifyErrorMessage.style.display = 'block';
+}
+
+function setLoading(isLoading, message = 'Procesando, espera un momento...') {
+    if (!verifyLoadingOverlay || !verifyLoadingText) {
+        return;
+    }
+
+    verifyLoadingText.textContent = message;
+    verifyLoadingOverlay.style.display = isLoading ? 'flex' : 'none';
 }
