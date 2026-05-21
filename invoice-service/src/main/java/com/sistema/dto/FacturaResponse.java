@@ -1,15 +1,16 @@
 package com.sistema.dto;
 
 // Nota: DTO para intercambio de datos entre capas/servicios.
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class FacturaResponse {
     private Long id;
     private String cliente;
     private Double montoBase;
     private Double iva;
+    private Double irpf;
     private Double total;
-    private LocalDateTime fechaEmision;
+    private LocalDate fechaEmision;
 
     public Long getId() {
         return id;
@@ -43,6 +44,14 @@ public class FacturaResponse {
         this.iva = iva;
     }
 
+    public Double getIrpf() {
+        return irpf;
+    }
+
+    public void setIrpf(Double irpf) {
+        this.irpf = irpf;
+    }
+
     public Double getTotal() {
         return total;
     }
@@ -51,11 +60,11 @@ public class FacturaResponse {
         this.total = total;
     }
 
-    public LocalDateTime getFechaEmision() {
+    public LocalDate getFechaEmision() {
         return fechaEmision;
     }
 
-    public void setFechaEmision(LocalDateTime fechaEmision) {
+    public void setFechaEmision(LocalDate fechaEmision) {
         this.fechaEmision = fechaEmision;
     }
 }

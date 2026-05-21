@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -67,11 +69,27 @@ public class AuthController {
 
             return ResponseEntity.ok(response);
         } catch (HttpClientErrorException.Unauthorized e) {
-            return ResponseEntity.status(401).body("Credenciales incorrectas o cuenta no verificada");
+            return ResponseEntity.status(401).body(extractErrorMessage(e.getResponseBodyAsString(), "Credenciales incorrectas"));
+        } catch (HttpClientErrorException.Forbidden e) {
+            return ResponseEntity.status(403).body(extractErrorMessage(e.getResponseBodyAsString(), "Cuenta no verificada"));
         } catch (HttpClientErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body("No se pudo autenticar al usuario");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error interno en security-service");
         }
+    }
+
+    private String extractErrorMessage(String responseBody, String fallback) {
+        if (responseBody == null || responseBody.isBlank()) {
+            return fallback;
+        }
+
+        Pattern pattern = Pattern.compile("\\\"message\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
+        Matcher matcher = pattern.matcher(responseBody);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+
+        return responseBody;
     }
 }

@@ -2,7 +2,7 @@ package com.sistema.model;
 
 // Nota: modelo de dominio persistido en base de datos.
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "facturas")
@@ -20,16 +20,17 @@ public class Factura {
 
     private Double montoBase;
     private Double iva;
+    private Double irpf;
     private Double total;
 
     @Column(name = "fecha_emision")
-    private LocalDateTime fechaEmision;
+    private LocalDate fechaEmision;
 
     // Asigna la fecha automáticamente antes de insertar en la DB
     @PrePersist
     protected void onCreate() {
         if (this.fechaEmision == null) {
-            this.fechaEmision = LocalDateTime.now();
+            this.fechaEmision = LocalDate.now();
         }
     }
 
@@ -49,10 +50,13 @@ public class Factura {
     public Double getIva() { return iva; }
     public void setIva(Double iva) { this.iva = iva; }
 
+    public Double getIrpf() { return irpf; }
+    public void setIrpf(Double irpf) { this.irpf = irpf; }
+    
     public Double getTotal() { return total; }
     public void setTotal(Double total) { this.total = total; }
 
-    public LocalDateTime getFechaEmision() { return fechaEmision; }
-    public void setFechaEmision(LocalDateTime fechaEmision) { this.fechaEmision = fechaEmision; }
+    public LocalDate getFechaEmision() { return fechaEmision; }
+    public void setFechaEmision(LocalDate fechaEmision) { this.fechaEmision = fechaEmision; }
 }
 

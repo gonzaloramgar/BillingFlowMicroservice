@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -123,9 +124,12 @@ public class CustomerController {
             
             // Si todo va bien, devolvemos el objeto Customer completo (incluyendo su rol)
             return ResponseEntity.ok(toResponse(customer));
-        } catch (Exception e) {
-            // Si fallan las credenciales o no está verificado, devolvemos error 401 (No autorizado)
-            return ResponseEntity.status(401).body(new MessageResponse(e.getMessage()));
+        } catch (RuntimeException e) {
+            String message = e.getMessage() == null ? "No se pudo iniciar sesión" : e.getMessage();
+            if (message.toLowerCase().contains("no verificada")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageResponse(message));
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse(message));
         }
     }
 

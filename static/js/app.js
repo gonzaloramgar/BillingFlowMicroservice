@@ -352,10 +352,13 @@ document.getElementById('invoiceFilter').addEventListener('change', e => {
 function recalcInvoiceTotals() {
     const base = parseFloat(document.getElementById('invoiceMontoBase').value) || 0;
     const ivaPct = parseFloat(document.getElementById('invoiceIvaPercent').value) || 0;
+    const irpfPct = parseFloat(document.getElementById('invoiceIrpfPercent').value) || 0; 
     const iva = base * ivaPct / 100;
-    const total = base + iva;
+    const irpf = base * irpfPct / 100; 
+    const total = base + iva - irpf; 
 
     document.getElementById('invoiceIva').value = iva.toFixed(2);
+    document.getElementById('invoiceIrpf').value = irpf.toFixed(2); 
     document.getElementById('invoiceTotal').value = total.toFixed(2);
 }
 
@@ -369,6 +372,40 @@ document.getElementById('invoiceCliente').addEventListener('input', e => {
     }
 });
 
+// Validación estricta: SOLO números y hasta 2 decimales
+// Rechaza: múltiples signos, letra 'e', múltiples puntos, etc.
+function validateNumberInput(value) {
+    if (value === '') return '';
+
+    const validPattern = /^-?[0-9]+(\.[0-9]{1,2})?$/;
+
+    if (!validPattern.test(value)) {
+        let cleaned = value.replace(/[^0-9.-]/g, '');
+        cleaned = cleaned.replace(/\.+/g, '.');
+        cleaned = cleaned.replace(/-+/g, '-');
+        if (cleaned.indexOf('-') > 0) {
+            cleaned = cleaned.replace(/-/g, '');
+        }
+
+        const parts = cleaned.split('.');
+        if (parts.length > 2) {
+            cleaned = parts[0] + '.' + parts.slice(1).join('');
+        }
+        if (parts[1] && parts[1].length > 2) {
+            cleaned = parts[0] + '.' + parts[1].substring(0, 2);
+        }
+
+        return cleaned;
+    }
+    return value;
+}
+
+document.getElementById('invoiceMontoBase').addEventListener('input', (e) => {
+    e.target.value = validateNumberInput(e.target.value);
+    recalcInvoiceTotals();
+});
+document.getElementById('invoiceIvaPercent').addEventListener('change', recalcInvoiceTotals);
+document.getElementById('invoiceIrpfPercent').addEventListener('change', recalcInvoiceTotals);
 // Autocompletar número de factura con fecha de hoy
 function initInvoiceForm() {
     // Al abrir "Nueva Factura" limpiamos el modo edición para empezar desde cero.
@@ -384,6 +421,7 @@ function initInvoiceForm() {
     document.getElementById('invoiceCliente').value = '';
     document.getElementById('invoiceMontoBase').value = '';
     document.getElementById('invoiceIvaPercent').value = '21';
+    document.getElementById('invoiceIrpfPercent').value = '0';
     document.getElementById('saveBtn').textContent = 'Guardar borrador';
     recalcInvoiceTotals();
 }
@@ -432,8 +470,9 @@ document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
             cliente: form.clienteNombre,
             montoBase: form.base,
             iva: form.iva,
+            irpf: form.irpf,
             total: form.total,
-            fechaEmision: form.fecha ? `${form.fecha}T00:00:00` : null
+            fechaEmision: form.fecha || null
         };
 
         const response = await fetch(INVOICE_API, {
@@ -474,6 +513,8 @@ function collectFormData() {
     const base = parseFloat(document.getElementById('invoiceMontoBase').value) || 0;
     const ivaPct = parseFloat(document.getElementById('invoiceIvaPercent').value) || 0;
     const iva = parseFloat(document.getElementById('invoiceIva').value) || 0;
+    const irpfPct = parseFloat(document.getElementById('invoiceIrpfPercent').value) || 0;
+    const irpf = parseFloat(document.getElementById('invoiceIrpf').value) || 0;
     const total = parseFloat(document.getElementById('invoiceTotal').value) || 0;
 
     return {
@@ -482,6 +523,8 @@ function collectFormData() {
         clienteNombre: normalizeClientName(document.getElementById('invoiceCliente').value),
         ivaPct,
         iva,
+        irpfPct,
+        irpf,
         base,
         total,
         status: 'pending',

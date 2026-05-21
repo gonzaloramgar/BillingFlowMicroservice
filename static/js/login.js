@@ -63,7 +63,18 @@ loginForm.addEventListener('submit', async (event) => {
             return;
         }
 
-        showError(responseText || 'No se pudo iniciar sesión. Verifica tus credenciales.');
+        const message = normalizeApiMessage(responseText) || 'No se pudo iniciar sesión. Verifica tus credenciales.';
+
+        if (response.status === 403 || isUnverifiedMessage(message)) {
+            const email = loginEmail.value.trim();
+            if (email) {
+                localStorage.setItem('pendingVerificationEmail', email);
+            }
+            window.location.href = `verify-code.html?email=${encodeURIComponent(email)}`;
+            return;
+        }
+
+        showError(message);
     } catch (error) {
         showError('Error de conexión con security-service en el puerto 9000.');
     } finally {
@@ -80,4 +91,21 @@ loginRetryBtn.addEventListener('click', () => {
 function showError(message) {
     loginErrorText.textContent = message;
     loginErrorMessage.style.display = 'block';
+}
+
+function normalizeApiMessage(responseText) {
+    if (!responseText) return '';
+    try {
+        const parsed = JSON.parse(responseText);
+        if (parsed && typeof parsed.message === 'string') {
+            return parsed.message;
+        }
+    } catch (e) {
+        // Response no es JSON, se trata como texto plano.
+    }
+    return responseText;
+}
+
+function isUnverifiedMessage(message) {
+    return typeof message === 'string' && message.toLowerCase().includes('no verificada');
 }

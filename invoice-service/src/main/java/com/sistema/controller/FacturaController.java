@@ -22,6 +22,7 @@ import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.security.Key;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -72,7 +73,7 @@ public class FacturaController {
             
             // La fecha se asigna en el Model (@PrePersist), pero la aseguramos para el XML inmediato
             if (factura.getFechaEmision() == null) {
-                factura.setFechaEmision(java.time.LocalDateTime.now());
+                factura.setFechaEmision(LocalDate.now());
             }
 
             // Guardar en MySQL
@@ -186,7 +187,7 @@ public class FacturaController {
      * Transforma el objeto Factura a un String XML compatible con la plantilla XSL-FO
      */
     private String convertirFacturaAXml(Factura f) {
-        DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String fechaStr = f.getFechaEmision().format(formato);
 
         return "<factura>" +
