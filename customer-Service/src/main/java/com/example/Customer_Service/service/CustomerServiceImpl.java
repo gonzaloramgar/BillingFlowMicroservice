@@ -30,6 +30,22 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Customer registerCustomer(Customer customer) {
+        String email = customer.getEmail();
+        if (email == null || email.trim().isEmpty()) {
+            throw new RuntimeException("Debes indicar un email válido.");
+        }
+
+        email = email.trim().toLowerCase();
+        customer.setEmail(email);
+
+        if (customerRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("El email ya está registrado. Inicia sesión o usa otro email.");
+        }
+
+        if (pendingCustomers.containsKey(email)) {
+            throw new RuntimeException("Ya hay un registro pendiente para este email. Revisa tu correo o espera unos minutos.");
+        }
+
         // 1. Generamos el código y expiración
         String code = String.format("%06d", new Random().nextInt(999999));
         customer.setVerificationCode(code);
