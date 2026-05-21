@@ -731,7 +731,12 @@ function openEditModal(id) {
     editRole.value = user.role || 'USER';
     editRole.disabled = (user.role || '').toUpperCase() === 'ADMIN';
     editRole.title = editRole.disabled ? 'Una cuenta ADMIN no puede perder privilegios.' : '';
-    document.getElementById('editEnabled').value   = String(user.enabled);
+
+    const editEnabled = document.getElementById('editEnabled');
+    const isEditingSelfAdmin = String(user.id) === String(currentUser?.id) && (currentUser?.role || '').toUpperCase() === 'ADMIN';
+    editEnabled.value = String(user.enabled);
+    editEnabled.disabled = isEditingSelfAdmin;
+    editEnabled.title = isEditingSelfAdmin ? 'No puedes quitarte la verificación siendo ADMIN.' : '';
 
     document.getElementById('adminModalOverlay').style.display = 'flex';
 }
@@ -747,9 +752,16 @@ async function saveUserEdit() {
     const email     = document.getElementById('editEmail').value.trim();
     const role      = document.getElementById('editRole').value;
     const enabled   = document.getElementById('editEnabled').value === 'true';
+    const isSelfEdit = String(id) === String(currentUser?.id);
+    const isCurrentAdmin = (currentUser?.role || '').toUpperCase() === 'ADMIN';
 
     if (!firstName || !email) {
         showToast('Nombre y email son obligatorios', 'error');
+        return;
+    }
+
+    if (isSelfEdit && isCurrentAdmin && !enabled) {
+        showToast('No puedes quitarte la verificación siendo ADMIN.', 'error');
         return;
     }
 

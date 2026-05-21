@@ -237,6 +237,11 @@ public class CustomerServiceImpl implements CustomerService {
         if (isAdminRole(customer.getRole()) && !isAdminRole(customerDetails.getRole())) {
             throw new IllegalStateException("Una cuenta ADMIN no puede quitarse privilegios.");
         }
+
+        // Regla de seguridad: una cuenta ADMIN no puede quedar desverificada.
+        if (isAdminRole(customer.getRole()) && Boolean.FALSE.equals(customerDetails.getEnabled())) {
+            throw new IllegalStateException("Una cuenta ADMIN no puede quedar sin verificar.");
+        }
     
         customer.setFirstName(customerDetails.getFirstName());
         customer.setLastName(customerDetails.getLastName());
