@@ -8,6 +8,7 @@ public class FacturaResponse {
     private String cliente;
     private Double montoBase;
     private Double iva;
+    private Double irpf;
     private Double total;
     private LocalDate fechaEmision;
 
@@ -41,6 +42,14 @@ public class FacturaResponse {
 
     public void setIva(Double iva) {
         this.iva = iva;
+    }
+
+    public Double getIrpf() {
+        return irpf;
+    }
+
+    public void setIrpf(Double irpf) {
+        this.irpf = irpf;
     }
 
     public Double getTotal() {

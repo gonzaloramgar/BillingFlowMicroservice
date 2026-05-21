@@ -150,6 +150,21 @@
                             </div>
                         </div>
 
+                        <div class="app-form-row">
+                            <div class="app-field">
+                                <label>IRPF %</label>
+                                <select id="invoiceIrpfPercent">
+                                    <option value="15">15%</option>
+                                    <option value="7">7%</option>
+                                    <option value="0" selected>0%</option>
+                                </select>
+                            </div>
+                            <div class="app-field">
+                                <label>Retención (irpf)</label>
+                                <input type="number" id="invoiceIrpf" step="0.01" readonly>
+                            </div>
+                        </div>
+                        
                         <div class="app-field">
                             <label>Total (total)</label>
                             <input type="number" id="invoiceTotal" step="0.01" readonly>
@@ -159,7 +174,7 @@
                     <div class="app-invoice-actions">
                         <div class="app-coming-soon-notice" id="comingSoonNotice">
                             <span>✅</span>
-                            <span>Factura conectada al <strong>Invoice Service</strong>. Los campos enviados son: cliente, montoBase, iva, total, fechaEmision.</span>
+                            <span>Factura conectada al <strong>Invoice Service</strong>. Los campos enviados son: cliente, montoBase, iva, irpf, total, fechaEmision.</span>
                         </div>
                         <button type="submit" class="btn-large" id="generateBtn">
                             Generar PDF

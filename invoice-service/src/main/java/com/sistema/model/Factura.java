@@ -19,6 +19,7 @@ public class Factura {
 
     private Double montoBase;
     private Double iva;
+    private Double irpf;
     private Double total;
 
     @Column(name = "fecha_emision")
@@ -48,6 +49,9 @@ public class Factura {
     public Double getIva() { return iva; }
     public void setIva(Double iva) { this.iva = iva; }
 
+    public Double getIrpf() { return irpf; }
+    public void setIrpf(Double irpf) { this.irpf = irpf; }
+    
     public Double getTotal() { return total; }
     public void setTotal(Double total) { this.total = total; }
 
