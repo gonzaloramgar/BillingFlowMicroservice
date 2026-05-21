@@ -1713,7 +1713,13 @@ body.legal-page {
     margin-bottom: 18px;
     color: var(--text-main);
 }
-
+.app-card-clientes {
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 18px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
 .app-link {
     background: none;
     border: none;
@@ -1944,7 +1950,7 @@ body.legal-page {
     color: #93c5fd;
     padding: 4px 12px;
     border-radius: 20px;
-    font-size: 0.8rem;
+    font-size: 2rem;
     font-weight: 600;
     border: 1px solid rgba(37,99,235,0.3);
 }

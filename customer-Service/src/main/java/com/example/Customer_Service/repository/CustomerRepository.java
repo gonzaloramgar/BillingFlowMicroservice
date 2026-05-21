@@ -12,6 +12,7 @@ import com.example.Customer_Service.model.Customer;
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
     // Método para buscar al usuario por email
     Optional<Customer> findByEmail(String email);
+    Optional<Customer> findByEmailIgnoreCase(String email);
 
     // Método para buscar por el código de verificación
     Optional<Customer> findByVerificationCode(String code);

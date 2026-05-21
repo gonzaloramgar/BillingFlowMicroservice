@@ -441,7 +441,7 @@ document.getElementById('invoiceForm').addEventListener('submit', async (e) => {
             montoBase: form.base,
             iva: form.iva,
             total: form.total,
-            fechaEmision: form.fecha ? `${form.fecha}T00:00:00` : null
+            fechaEmision: form.fecha || null
         };
 
         const response = await fetch(INVOICE_API, {

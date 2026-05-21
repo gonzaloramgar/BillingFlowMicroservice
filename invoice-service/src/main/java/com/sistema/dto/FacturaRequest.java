@@ -1,14 +1,14 @@
 package com.sistema.dto;
 
 // Nota: DTO para intercambio de datos entre capas/servicios.
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class FacturaRequest {
     private String cliente;
     private Double montoBase;
     private Double iva;
     private Double total;
-    private LocalDateTime fechaEmision;
+    private LocalDate fechaEmision;
 
     public String getCliente() {
         return cliente;
@@ -42,11 +42,11 @@ public class FacturaRequest {
         this.total = total;
     }
 
-    public LocalDateTime getFechaEmision() {
+    public LocalDate getFechaEmision() {
         return fechaEmision;
     }
 
-    public void setFechaEmision(LocalDateTime fechaEmision) {
+    public void setFechaEmision(LocalDate fechaEmision) {
         this.fechaEmision = fechaEmision;
     }
 }

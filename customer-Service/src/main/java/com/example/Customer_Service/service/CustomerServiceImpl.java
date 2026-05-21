@@ -28,8 +28,15 @@ public class CustomerServiceImpl implements CustomerService {
     // "Sala de espera": Guarda los datos en RAM antes de ir a MySQL
     private final Map<String, Customer> pendingCustomers = new ConcurrentHashMap<>();
 
+    private String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase();
+    }
+
     @Override
     public Customer registerCustomer(Customer customer) {
+        String normalizedEmail = normalizeEmail(customer.getEmail());
+        customer.setEmail(normalizedEmail);
+
         // 1. Generamos el código y expiración
         String code = String.format("%06d", new Random().nextInt(999999));
         customer.setVerificationCode(code);
@@ -55,14 +62,15 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         // 3. GUARDAR EN MEMORIA solo si el envio fue correcto
-        pendingCustomers.put(customer.getEmail(), customer);
+        pendingCustomers.put(normalizedEmail, customer);
 
         return customer;
     }
 
     @Override
     public boolean verifyCode(String email, String code) {
-        Customer customer = pendingCustomers.get(email);
+        String normalizedEmail = normalizeEmail(email);
+        Customer customer = pendingCustomers.get(normalizedEmail);
         
         if (customer != null) {
             if (customer.getFailedAttemps() >= 3) {
@@ -100,6 +108,35 @@ public class CustomerServiceImpl implements CustomerService {
                 return false;
             }
         }
+
+        // Si no está en memoria, intentamos verificar una cuenta persistida pero no habilitada.
+        Customer persistedCustomer = customerRepository.findByEmailIgnoreCase(normalizedEmail).orElse(null);
+        if (persistedCustomer != null && !Boolean.TRUE.equals(persistedCustomer.getEnabled())) {
+            if (persistedCustomer.getVerificationCode() == null || persistedCustomer.getCodeExpiration() == null) {
+                System.out.println("Cuenta no verificada sin código activo. Debe solicitar reenvío.");
+                return false;
+            }
+
+            if (persistedCustomer.getCodeExpiration().isBefore(LocalDateTime.now())) {
+                System.out.println("El código ha expirado para cuenta persistida.");
+                return false;
+            }
+
+            if (persistedCustomer.getVerificationCode().equals(code)) {
+                persistedCustomer.setEnabled(true);
+                persistedCustomer.setVerificationCode(null);
+                persistedCustomer.setCodeExpiration(null);
+                persistedCustomer.setFailedAttemps(0);
+                customerRepository.save(persistedCustomer);
+                System.out.println("¡Verificado! Cuenta persistida habilitada correctamente.");
+                return true;
+            }
+
+            persistedCustomer.setFailedAttemps((persistedCustomer.getFailedAttemps() == null ? 0 : persistedCustomer.getFailedAttemps()) + 1);
+            customerRepository.save(persistedCustomer);
+            System.out.println("Código erróneo en cuenta persistida. Intento: " + persistedCustomer.getFailedAttemps());
+            return false;
+        }
         
         System.out.println("No hay ningún registro pendiente para este email.");
         return false;
@@ -107,21 +144,41 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public boolean resendVerificationCode(String email) {
-        Customer customer = pendingCustomers.get(email);
+        String normalizedEmail = normalizeEmail(email);
+        Customer customer = pendingCustomers.get(normalizedEmail);
 
-        if (customer == null) {
+        if (customer != null) {
+            String code = String.format("%06d", new Random().nextInt(999999));
+            customer.setVerificationCode(code);
+            customer.setCodeExpiration(LocalDateTime.now().plusMinutes(20));
+            customer.setFailedAttemps(0);
+
+            try {
+                emailService.sendVerificationEmail(customer.getEmail(), code);
+                System.out.println("Código reenviado a: " + customer.getEmail());
+                return true;
+            } catch (Exception e) {
+                System.err.println("Error al reenviar código: " + e.getMessage());
+                return false;
+            }
+        }
+
+        // Soporta también cuentas persistidas en BD que siguen deshabilitadas.
+        Customer persistedCustomer = customerRepository.findByEmailIgnoreCase(normalizedEmail).orElse(null);
+        if (persistedCustomer == null || Boolean.TRUE.equals(persistedCustomer.getEnabled())) {
             System.out.println("No existe registro pendiente para reenviar código.");
             return false;
         }
 
         String code = String.format("%06d", new Random().nextInt(999999));
-        customer.setVerificationCode(code);
-        customer.setCodeExpiration(LocalDateTime.now().plusMinutes(20));
-        customer.setFailedAttemps(0);
+        persistedCustomer.setVerificationCode(code);
+        persistedCustomer.setCodeExpiration(LocalDateTime.now().plusMinutes(20));
+        persistedCustomer.setFailedAttemps(0);
+        customerRepository.save(persistedCustomer);
 
         try {
-            emailService.sendVerificationEmail(customer.getEmail(), code);
-            System.out.println("Código reenviado a: " + customer.getEmail());
+            emailService.sendVerificationEmail(persistedCustomer.getEmail(), code);
+            System.out.println("Código reenviado a cuenta persistida: " + persistedCustomer.getEmail());
             return true;
         } catch (Exception e) {
             System.err.println("Error al reenviar código: " + e.getMessage());
@@ -161,10 +218,35 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Customer login(String email, String password) {
-        return customerRepository.findByEmail(email)
-            .filter(Customer::getEnabled)
-            .filter(c -> passwordEncoder.matches(password, c.getPassword()))
-            .orElseThrow(() -> new RuntimeException("Credenciales incorrectas o cuenta no verificada"));
+        String normalizedEmail = normalizeEmail(email);
+        Customer persistedCustomer = customerRepository.findByEmailIgnoreCase(normalizedEmail).orElse(null);
+        if (persistedCustomer != null) {
+            if (!passwordEncoder.matches(password, persistedCustomer.getPassword())) {
+                throw new RuntimeException("Credenciales incorrectas");
+            }
+
+            if (!Boolean.TRUE.equals(persistedCustomer.getEnabled())) {
+                boolean resent = resendVerificationCode(normalizedEmail);
+                if (resent) {
+                    throw new RuntimeException("Cuenta no verificada. Te hemos reenviado un código de verificación por correo.");
+                }
+                throw new RuntimeException("Cuenta no verificada. No se pudo reenviar el código, inténtalo de nuevo.");
+            }
+
+            return persistedCustomer;
+        }
+
+        // Si el usuario aún está pendiente de verificación (en memoria), reenviamos código automáticamente.
+        Customer pendingCustomer = pendingCustomers.get(normalizedEmail);
+        if (pendingCustomer != null && passwordEncoder.matches(password, pendingCustomer.getPassword())) {
+            boolean resent = resendVerificationCode(normalizedEmail);
+            if (resent) {
+                throw new RuntimeException("Cuenta no verificada. Te hemos reenviado un código de verificación por correo.");
+            }
+            throw new RuntimeException("Cuenta no verificada. No se pudo reenviar el código, inténtalo de nuevo.");
+        }
+
+        throw new RuntimeException("Credenciales incorrectas");
     }
 }
 
