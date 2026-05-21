@@ -12,6 +12,7 @@ public class Factura {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 50)
     private String cliente;
 
     @Column(name = "owner_email")
