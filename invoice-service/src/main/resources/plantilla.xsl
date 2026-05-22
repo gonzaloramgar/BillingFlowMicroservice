@@ -66,6 +66,10 @@
                                 <fo:table-cell number-columns-spanned="2" padding="5pt" text-align="right" font-size="10pt"><fo:block>IVA (21%):</fo:block></fo:table-cell>
                                 <fo:table-cell padding="5pt" text-align="right" font-size="10pt"><fo:block><xsl:value-of select="iva"/> €</fo:block></fo:table-cell>
                             </fo:table-row>
+                            <fo:table-row>
+                                <fo:table-cell number-columns-spanned="2" padding="5pt" text-align="right" font-size="10pt"><fo:block>IRPF:</fo:block></fo:table-cell>
+                                <fo:table-cell padding="5pt" text-align="right" font-size="10pt"><fo:block>- <xsl:value-of select="irpf"/> €</fo:block></fo:table-cell>
+                            </fo:table-row>
                         </fo:table-body>
                     </fo:table>
 

@@ -69,7 +69,8 @@ public class FacturaController {
             // Lógica de negocio: asegurar que los cálculos existan
             if (factura.getMontoBase() == null) factura.setMontoBase(0.0);
             if (factura.getIva() == null) factura.setIva(factura.getMontoBase() * 0.21);
-            if (factura.getTotal() == null) factura.setTotal(factura.getMontoBase() + factura.getIva());
+            if (factura.getIrpf() == null) factura.setIrpf(0.0);
+            if (factura.getTotal() == null) factura.setTotal(factura.getMontoBase() + factura.getIva() - factura.getIrpf());
             
             // La fecha se asigna en el Model (@PrePersist), pero la aseguramos para el XML inmediato
             if (factura.getFechaEmision() == null) {
@@ -195,6 +196,7 @@ public class FacturaController {
                 "<cliente>" + f.getCliente() + "</cliente>" +
                 "<montoBase>" + String.format("%.2f", f.getMontoBase()) + "</montoBase>" +
                 "<iva>" + String.format("%.2f", f.getIva()) + "</iva>" +
+                "<irpf>" + String.format("%.2f", f.getIrpf()) + "</irpf>" +
                 "<total>" + String.format("%.2f", f.getTotal()) + "</total>" +
                 "<fecha>" + fechaStr + "</fecha>" +
                "</factura>";
@@ -239,6 +241,7 @@ public class FacturaController {
         factura.setCliente(request.getCliente());
         factura.setMontoBase(request.getMontoBase());
         factura.setIva(request.getIva());
+        factura.setIrpf(request.getIrpf());
         factura.setTotal(request.getTotal());
         factura.setFechaEmision(request.getFechaEmision());
         return factura;
@@ -250,6 +253,7 @@ public class FacturaController {
         response.setCliente(factura.getCliente());
         response.setMontoBase(factura.getMontoBase());
         response.setIva(factura.getIva());
+        response.setIrpf(factura.getIrpf());
         response.setTotal(factura.getTotal());
         response.setFechaEmision(factura.getFechaEmision());
         return response;
